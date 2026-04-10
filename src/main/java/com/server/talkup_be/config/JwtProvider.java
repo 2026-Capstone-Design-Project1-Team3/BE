@@ -29,12 +29,12 @@ public class JwtProvider {
     }
 
     // JWT 토큰 생성
-    public String generateToken(UUID userId, String loginId, String name) {
+    public String generateToken(String userId, String loginId, String name) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + EXPIRATION_TIME);
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))  // [표준] "sub": "String" (user의 id)
+                .setSubject(userId)  // [표준] "sub": "String" (user의 id)
                 .claim("loginId", loginId)        // "loginId": "String"
                 .claim("name", name)              // "name": "String"
                 .setIssuedAt(now)                   // [표준] "iat": "Number" (발급 시간)

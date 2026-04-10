@@ -6,11 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 @Getter
 @Builder
 @NoArgsConstructor
@@ -56,7 +57,11 @@ public class User {
         this.name= newName;
         this.email = newEmail;
     }
-    
+
+    public void updatePassword(@Nullable String encode) {
+        this.passWord = encode;
+    }
+
     //비번 수정도 만들어야 함
 }
 
