@@ -62,7 +62,7 @@ public class UserDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @ToString
-    public class UserInfo {
+    public static class UserInfo {
         private String loginId;
         private String name;
         private String email;
@@ -72,7 +72,7 @@ public class UserDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @ToString
-    public class UserEye {
+    public static class UserEye {
         private Double leftEyeOffset;
         private Double rightEyeOffset;
         private Double ratio;

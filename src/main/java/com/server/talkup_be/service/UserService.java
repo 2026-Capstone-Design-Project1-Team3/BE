@@ -86,7 +86,7 @@ public class UserService {
     // 만들려는 loginId 중복 체크
     public Integer check(String loginId) {
         //있으면? 0
-        return userRepo.findByLoginId(loginId).isPresent() ? 1 : 0;
+        return userRepo.findByLoginId(loginId).isPresent() ? 0 : 1;
     }
 
     // user 정보 반환
@@ -124,5 +124,8 @@ public class UserService {
 
         // 3. user Update eye Calibration
         user.updateEyeCalibration(newCalibration);
+
+        // 안전장치
+        userRepo.save(user);
     }
 }

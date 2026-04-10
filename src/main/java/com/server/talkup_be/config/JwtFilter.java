@@ -1,12 +1,17 @@
 package com.server.talkup_be.config;
 
 import com.server.talkup_be.service.RedisBlacklistService;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import java.util.List;
 
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -33,10 +38,24 @@ public class JwtFilter extends OncePerRequestFilter {
                 return; // 더 이상 진행하지 않고 여기서 차단
             }
 
-            // 블랙리스트에 없으면 정상적으로 유효성 검사 진행
+            // 블랙리스트에 없으면 정상적으로 유효성 검사 진행(다시 보자...)
             try {
-                jwtProvider.validateAndGetClaims(token);
-                // (이후 SecurityContext에 유저 정보 저장하는 로직 등이 들어갑니다)
+                // 1. 토큰 해독해서 정보 꺼내기
+                Claims claims = jwtProvider.validateAndGetClaims(token);
+                String userId = claims.getSubject(); // 토큰 만들 때 넣었던 userId (UUID)
+
+                // 2. 스프링 시큐리티에게 인증되었다고 알려줄 '인증 객체' 만들기
+                // UsernamePasswordAuthenticationToken(사용자 식별자, 비밀번호=null, 권한목록)
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userId,
+                                null,
+                                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                        );
+
+                // 3. SecurityContext에 인증 정보 저장
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
             } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
