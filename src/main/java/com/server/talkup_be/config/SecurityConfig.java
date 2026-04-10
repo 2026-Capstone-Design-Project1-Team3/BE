@@ -52,8 +52,10 @@ public class SecurityConfig {
 
                 // 5. 요청 경로별 권한 설정
                 .authorizeHttpRequests(auth -> auth
-                        // 회원가입, 로그인, 중복확인 등은 누구나 접근 가능
-                        .requestMatchers("/user/signUp", "/user/login", "/user/check/**").permitAll()
+                        // 회원가입, 로그인, 중복확인, swaggeer 등은 누구나 접근 가능
+                        .requestMatchers("/user/signUp", "/user/login", "/user/check/**",
+                                        "/swagger-ui/**", "/v3/api-docs/**"
+                        ).permitAll()
                         // 그 외는 토큰 필요
                         .anyRequest().authenticated()
                 )
