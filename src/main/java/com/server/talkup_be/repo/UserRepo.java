@@ -24,6 +24,4 @@ public interface UserRepo extends JpaRepository<User, UUID> {
             "FROM User u " +
             "WHERE u.id = :myId")
     UserDto.UserInfo findByIdFromFront(UUID myId);
-
-    UserDto.UserEye findByIdFromEyeCalibration(UUID myId);
 }
