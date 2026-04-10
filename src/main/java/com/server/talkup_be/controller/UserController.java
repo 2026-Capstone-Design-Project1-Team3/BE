@@ -6,13 +6,16 @@ import com.server.talkup_be.entity.User;
 import com.server.talkup_be.service.RedisBlacklistService;
 import com.server.talkup_be.service.UserService;
 import io.jsonwebtoken.Claims;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -28,44 +31,68 @@ public class UserController {
         this.userService = userService;
     }
 
-    // 회원가입
-    @PostMapping("/signUp")
-    public ResponseEntity<?> signUp(@RequestBody UserDto.UserInput userInput) {
-        try {
-            // 테스트용(추후 지우기)
-            log.info("회원가입 요청 데이터 확인: " + userInput.toString());
-            // 회원가입 service 호출
-            userService.save(userInput);
-            return ResponseEntity.ok(200);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(e.getMessage());
-        }
-    }
-
     // 로그인
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody UserDto.UserLogin userLogin) {
         try{
-        String loginId = userLogin.getLoginId();
-        String passWord = userLogin.getPassWord();
+            String loginId = userLogin.getLoginId();
+            String passWord = userLogin.getPassWord();
 
-        // 1. DB에 존재하는지 검증
-        User user = userService.validateUser(loginId,passWord);
+            // 1. DB에 존재하는지 검증
+            User user = userService.validateUser(loginId,passWord);
 
-        // 2. 인증 성공 시 토큰 발급 String userId, String loginId, String name
-        String token = jwtProvider.generateToken(user.getId(), loginId, user.getName());
+            // 2. 인증 성공 시 토큰 발급 String userId, String loginId, String name
+            String token = jwtProvider.generateToken(user.getId().toString(), loginId, user.getName());
 
-        // 3. 헤더에 토큰 담기
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + token);
+            // 3. 헤더에 토큰 담기
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "Bearer " + token);
 
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body("로그인 성공");
-    } catch (IllegalArgumentException e) {
-        // 4. Service에서 던진 에러(아이디 없음, 비번 맞지 않음) 처리
-        return ResponseEntity.status(401).body(e.getMessage());
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body("로그인 성공");
+        } catch (IllegalArgumentException e) {
+            // 4. Service에서 던진 에러(아이디 없음, 비번 맞지 않음) 처리
+            return ResponseEntity.status(401).body(e.getMessage());
+        }
+    }
+
+    // 회원가입
+    @PostMapping("/signUp")
+    public ResponseEntity<?> signUp(
+            @Valid @RequestBody UserDto.UserInput userInput, // @Valid - DTO 검사를 시작
+            BindingResult bindingResult // 검사 결과(에러)
+    ) {
+        // 1. DTO 규칙 위반 시
+        if (bindingResult.hasErrors()) {
+            // 첫 번째 에러 메시지
+            String errorMessage = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            // 400 Bad Request와 함께 프론트엔드에게 실패 이유
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+        }
+
+        try {
+            //log는 추후 삭제 요망
+            log.info("회원가입 요청 데이터 확인: " + userInput.toString());
+            // 2. user save 호출
+            userService.save(userInput);
+            return ResponseEntity.ok("회원가입 성공");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    //아이디 중복 확인
+    @GetMapping("/check/{loginId}")
+    public ResponseEntity<?> signUp(@PathVariable String loginId) {
+        try {
+            //1. 기존 아이디 있으면? 0
+            Integer check = userService.check(loginId);
+            if (check == 0) return ResponseEntity.status(409).body("중복된 아이디");
+            else return ResponseEntity.ok("사용 가능한 닉네임");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
         }
     }
 
@@ -87,5 +114,34 @@ public class UserController {
         }
 
         return ResponseEntity.ok("로그아웃 되었습니다.");
+    }
+
+    // 회원 정보 수정
+    @PatchMapping("")
+    public ResponseEntity<String> updateUser(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody UserDto.UserUpdate updateDto) {
+        try {
+            // 1. 토큰에서 내 ID get
+            String token = authHeader.replace("Bearer ", "");
+            String userIdStr = jwtProvider.validateAndGetUserId(token);
+            UUID userId = UUID.fromString(userIdStr);
+
+            // 2. Service 호출
+            userService.updateUser(userId, updateDto);
+
+            // 3. 200 성공 반환
+            return ResponseEntity.ok("수정 성공 및 완료");
+
+        } catch (IllegalStateException e) {
+            // past와 new가 같이 오지 않은 경우
+            return ResponseEntity.status(403).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // 기존 비번이 틀린 경우
+            return ResponseEntity.status(400).body(e.getMessage());
+        } catch (Exception e) {
+            // 토큰이 이상하거나 기타 에러
+            return ResponseEntity.status(401).body("로그인 필요 또는 유효하지 않은 토큰");
+        }
     }
 }
