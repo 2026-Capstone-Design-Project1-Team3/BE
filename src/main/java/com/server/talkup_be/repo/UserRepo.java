@@ -1,6 +1,7 @@
 package com.server.talkup_be.repo;
 
 import com.server.talkup_be.dto.UserDto;
+import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,4 +24,6 @@ public interface UserRepo extends JpaRepository<User, UUID> {
             "FROM User u " +
             "WHERE u.id = :myId")
     UserDto.UserInfo findByIdFromFront(UUID myId);
+
+    UserDto.UserEye findByIdFromEyeCalibration(UUID myId);
 }

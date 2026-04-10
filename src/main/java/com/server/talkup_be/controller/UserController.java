@@ -117,9 +117,9 @@ public class UserController {
         return ResponseEntity.ok("로그아웃 되었습니다.");
     }
 
-    //내정보 조회
+    // 내정보 조회
     @GetMapping("/me")
-    public ResponseEntity<?> mySetting(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> profile(@RequestHeader("Authorization") String authHeader) {
         try {
             // 1. 토큰에서 내 ID get
             String token = authHeader.replace("Bearer ", "");
@@ -161,6 +161,24 @@ public class UserController {
         } catch (Exception e) {
             // 토큰이 이상하거나 기타 에러
             return ResponseEntity.status(401).body("로그인 필요 또는 유효하지 않은 토큰");
+        }
+    }
+
+    // 시선 캘리브레이션 조회
+    @GetMapping("/me")
+    public ResponseEntity<?> EyeProfile(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // 1. 토큰에서 내 ID get
+            String token = authHeader.replace("Bearer ", "");
+            String userIdStr = jwtProvider.validateAndGetUserId(token);
+            UUID userId = UUID.fromString(userIdStr);
+
+            // 2. Service 호출
+            UserDto.UserEye userEye = userService.getUserEye(userId);
+            return ResponseEntity.ok(userEye);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
         }
     }
 }

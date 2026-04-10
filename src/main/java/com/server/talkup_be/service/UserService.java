@@ -91,4 +91,9 @@ public class UserService {
     public UserDto.UserInfo getUser(UUID myId) {
         return userRepo.findByIdFromFront(myId);
     }
+
+    // user 시선 캘리브레이션 정보 반환
+    public UserDto.UserEye getUserEye(UUID myId) {
+        return userRepo.findByIdFromEyeCalibration(myId);
+    }
 }
