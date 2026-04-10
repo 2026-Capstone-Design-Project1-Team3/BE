@@ -124,5 +124,8 @@ public class UserService {
 
         // 3. user Update eye Calibration
         user.updateEyeCalibration(newCalibration);
+
+        // 안전장치
+        userRepo.save(user);
     }
 }
