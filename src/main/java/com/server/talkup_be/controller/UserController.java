@@ -2,7 +2,9 @@ package com.server.talkup_be.controller;
 
 import com.server.talkup_be.config.JwtProvider;
 import com.server.talkup_be.dto.UserDto;
+import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.entity.User;
+import com.server.talkup_be.exception.MissingCalibrationException;
 import com.server.talkup_be.service.RedisBlacklistService;
 import com.server.talkup_be.service.UserService;
 import io.jsonwebtoken.Claims;
@@ -174,9 +176,14 @@ public class UserController {
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
-            UserDto.UserEye userEye = userService.getUserEye(userId);
+            EyeCalibration userEye = userService.getUserEye(userId);
             return ResponseEntity.ok(userEye);
+        } catch (MissingCalibrationException e) {
+            // 403 : 시선 Calibration 값이 null일 때
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(e.getMessage());
         } catch (RuntimeException e) {
+            // 그 외
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(e.getMessage());
         }
