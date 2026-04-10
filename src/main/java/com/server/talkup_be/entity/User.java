@@ -62,6 +62,7 @@ public class User {
         this.passWord = encode;
     }
 
+
     //비번 수정도 만들어야 함
 }
 

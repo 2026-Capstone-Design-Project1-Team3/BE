@@ -181,4 +181,31 @@ public class UserController {
                     .body(e.getMessage());
         }
     }
+
+    // 시선 보정값 설정
+    @PostMapping("/eye")
+    public ResponseEntity<?> setEyeCalibration(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody UserDto.UserEye userEye) {
+        try {
+            // 1. 토큰 추출 (프론트가 준 토큰)
+            String token = authHeader.replace("Bearer ", "");
+            String userIdStr = jwtProvider.validateAndGetUserId(token);
+            UUID userId = UUID.fromString(userIdStr);
+
+            // 3. Service 호출
+            userService.saveUserEyeData(userId, userEye);
+
+            return ResponseEntity.ok().body("시선 보정값이 성공적으로 설정되었습니다.");
+
+        } catch (IllegalArgumentException | SecurityException e) {
+            // 401 : 토큰이 이상하거나 로그인이 안 된 경우
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("로그인이 필요하거나 유효하지 않은 토큰입니다.");
+        } catch (Exception e) {
+            // 기타
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("시선 보정값 설정 중 오류가 발생했습니다.");
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package com.server.talkup_be.service;
 
 import com.server.talkup_be.dto.UserDto;
+import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.entity.User;
 import com.server.talkup_be.repo.UserRepo;
 import org.springframework.http.ResponseEntity;
@@ -95,5 +96,22 @@ public class UserService {
     // user 시선 캘리브레이션 정보 반환
     public UserDto.UserEye getUserEye(UUID myId) {
         return userRepo.findByIdFromEyeCalibration(myId);
+    }
+
+    // user 시선 캘리브레이션 정보 저장
+    public void saveUserEyeData(UUID userId, UserDto.UserEye userEye) {
+        // 1. 내 정보 찾기
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 2. EyeCalibration 객체 생성
+        EyeCalibration newCalibration = EyeCalibration.builder()
+                .leftEyeOffset(userEye.getLeftEyeOffset())
+                .rightEyeOffset(userEye.getRightEyeOffset())
+                .ratio(userEye.getRatio())
+                .build();
+
+        // 3. user Update eye Calibration
+        user.updateEyeCalibration(newCalibration);
     }
 }

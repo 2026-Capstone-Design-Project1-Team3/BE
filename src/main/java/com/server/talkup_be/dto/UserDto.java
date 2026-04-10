@@ -73,8 +73,8 @@ public class UserDto {
     @AllArgsConstructor
     @ToString
     public class UserEye {
-        @JdbcTypeCode(SqlTypes.JSON)
-        @Column(columnDefinition = "json")
-        private EyeCalibration eyeCalibration;
+        private Double leftEyeOffset;
+        private Double rightEyeOffset;
+        private Double ratio;
     }
 }
