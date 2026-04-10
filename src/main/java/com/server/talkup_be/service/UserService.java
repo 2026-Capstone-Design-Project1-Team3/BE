@@ -80,4 +80,9 @@ public class UserService {
         // 6. 이름이나 이메일 업데이트
         user.updateUser(updateDto.getName(), updateDto.getEmail());
     }
+
+    public Integer check(String loginId) {
+        //있으면? 0
+        return userRepo.findByLoginId(loginId).isPresent() ? 1 : 0;
+    }
 }

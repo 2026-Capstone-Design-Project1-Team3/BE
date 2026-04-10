@@ -31,6 +31,32 @@ public class UserController {
         this.userService = userService;
     }
 
+    // 로그인
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody UserDto.UserLogin userLogin) {
+        try{
+            String loginId = userLogin.getLoginId();
+            String passWord = userLogin.getPassWord();
+
+            // 1. DB에 존재하는지 검증
+            User user = userService.validateUser(loginId,passWord);
+
+            // 2. 인증 성공 시 토큰 발급 String userId, String loginId, String name
+            String token = jwtProvider.generateToken(user.getId().toString(), loginId, user.getName());
+
+            // 3. 헤더에 토큰 담기
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "Bearer " + token);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body("로그인 성공");
+        } catch (IllegalArgumentException e) {
+            // 4. Service에서 던진 에러(아이디 없음, 비번 맞지 않음) 처리
+            return ResponseEntity.status(401).body(e.getMessage());
+        }
+    }
+
     // 회원가입
     @PostMapping("/signUp")
     public ResponseEntity<?> signUp(
@@ -56,29 +82,17 @@ public class UserController {
         }
     }
 
-    // 로그인
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserDto.UserLogin userLogin) {
-        try{
-        String loginId = userLogin.getLoginId();
-        String passWord = userLogin.getPassWord();
-
-        // 1. DB에 존재하는지 검증
-        User user = userService.validateUser(loginId,passWord);
-
-        // 2. 인증 성공 시 토큰 발급 String userId, String loginId, String name
-        String token = jwtProvider.generateToken(user.getId().toString(), loginId, user.getName());
-
-        // 3. 헤더에 토큰 담기
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + token);
-
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body("로그인 성공");
-    } catch (IllegalArgumentException e) {
-        // 4. Service에서 던진 에러(아이디 없음, 비번 맞지 않음) 처리
-        return ResponseEntity.status(401).body(e.getMessage());
+    //아이디 중복 확인
+    @GetMapping("/check/{loginId}")
+    public ResponseEntity<?> signUp(@PathVariable String loginId) {
+        try {
+            //1. 기존 아이디 있으면? 0
+            Integer check = userService.check(loginId);
+            if (check == 0) return ResponseEntity.status(409).body("중복된 아이디");
+            else return ResponseEntity.ok("사용 가능한 닉네임");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
         }
     }
 
