@@ -167,7 +167,7 @@ public class UserController {
     }
 
     // 시선 캘리브레이션 조회
-    @GetMapping("/me")
+    @GetMapping("/eye")
     public ResponseEntity<?> EyeProfile(@RequestHeader("Authorization") String authHeader) {
         try {
             // 1. 토큰에서 내 ID get
