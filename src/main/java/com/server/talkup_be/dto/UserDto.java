@@ -1,10 +1,14 @@
 package com.server.talkup_be.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.server.talkup_be.entity.EyeCalibration;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 public class UserDto {
     @Builder
@@ -52,5 +56,25 @@ public class UserDto {
         private String newPassWord;  // null 허용
         private String name;
         private String email;
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public class UserInfo {
+        private String loginId;
+        private String name;
+        private String email;
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public class UserEye {
+        private Double leftEyeOffset;
+        private Double rightEyeOffset;
+        private Double ratio;
     }
 }

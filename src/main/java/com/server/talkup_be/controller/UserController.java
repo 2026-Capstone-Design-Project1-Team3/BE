@@ -2,7 +2,9 @@ package com.server.talkup_be.controller;
 
 import com.server.talkup_be.config.JwtProvider;
 import com.server.talkup_be.dto.UserDto;
+import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.entity.User;
+import com.server.talkup_be.exception.MissingCalibrationException;
 import com.server.talkup_be.service.RedisBlacklistService;
 import com.server.talkup_be.service.UserService;
 import io.jsonwebtoken.Claims;
@@ -11,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -116,6 +119,24 @@ public class UserController {
         return ResponseEntity.ok("로그아웃 되었습니다.");
     }
 
+    // 내정보 조회
+    @GetMapping("/me")
+    public ResponseEntity<?> profile(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // 1. 토큰에서 내 ID get
+            String token = authHeader.replace("Bearer ", "");
+            String userIdStr = jwtProvider.validateAndGetUserId(token);
+            UUID userId = UUID.fromString(userIdStr);
+
+            // 2. Service 호출
+            UserDto.UserInfo userInfo = userService.getUser(userId);
+            return ResponseEntity.ok(userInfo);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+        }
+    }
+
     // 회원 정보 수정
     @PatchMapping("")
     public ResponseEntity<String> updateUser(
@@ -142,6 +163,56 @@ public class UserController {
         } catch (Exception e) {
             // 토큰이 이상하거나 기타 에러
             return ResponseEntity.status(401).body("로그인 필요 또는 유효하지 않은 토큰");
+        }
+    }
+
+    // 시선 캘리브레이션 조회
+    @GetMapping("/eye")
+    public ResponseEntity<?> EyeProfile(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // 1. 토큰에서 내 ID get
+            String token = authHeader.replace("Bearer ", "");
+            String userIdStr = jwtProvider.validateAndGetUserId(token);
+            UUID userId = UUID.fromString(userIdStr);
+
+            // 2. Service 호출
+            EyeCalibration userEye = userService.getUserEye(userId);
+            return ResponseEntity.ok(userEye);
+        } catch (MissingCalibrationException e) {
+            // 403 : 시선 Calibration 값이 null일 때
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(e.getMessage());
+        } catch (RuntimeException e) {
+            // 그 외
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+        }
+    }
+
+    // 시선 보정값 설정
+    @PostMapping("/eye")
+    public ResponseEntity<?> setEyeCalibration(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody UserDto.UserEye userEye) {
+        try {
+            // 1. 토큰 추출 (프론트가 준 토큰)
+            String token = authHeader.replace("Bearer ", "");
+            String userIdStr = jwtProvider.validateAndGetUserId(token);
+            UUID userId = UUID.fromString(userIdStr);
+
+            // 3. Service 호출
+            userService.saveUserEyeData(userId, userEye);
+
+            return ResponseEntity.ok().body("시선 보정값이 성공적으로 설정되었습니다.");
+
+        } catch (IllegalArgumentException | SecurityException e) {
+            // 401 : 토큰이 이상하거나 로그인이 안 된 경우
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("로그인이 필요하거나 유효하지 않은 토큰입니다.");
+        } catch (Exception e) {
+            // 기타
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("시선 보정값 설정 중 오류가 발생했습니다.");
         }
     }
 }

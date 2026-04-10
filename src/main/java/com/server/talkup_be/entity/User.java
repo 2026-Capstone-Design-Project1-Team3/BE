@@ -61,7 +61,5 @@ public class User {
     public void updatePassword(@Nullable String encode) {
         this.passWord = encode;
     }
-
-    //비번 수정도 만들어야 함
 }
 
