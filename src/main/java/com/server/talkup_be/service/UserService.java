@@ -81,8 +81,14 @@ public class UserService {
         user.updateUser(updateDto.getName(), updateDto.getEmail());
     }
 
+    // 만들려는 loginId 중복 체크
     public Integer check(String loginId) {
         //있으면? 0
         return userRepo.findByLoginId(loginId).isPresent() ? 1 : 0;
+    }
+
+    // user 정보 반환
+    public UserDto.UserInfo getUser(UUID myId) {
+        return userRepo.findByIdFromFront(myId);
     }
 }

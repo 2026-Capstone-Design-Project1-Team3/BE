@@ -53,4 +53,14 @@ public class UserDto {
         private String name;
         private String email;
     }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public class UserInfo {
+        private String loginId;
+        private String name;
+        private String email;
+    }
 }

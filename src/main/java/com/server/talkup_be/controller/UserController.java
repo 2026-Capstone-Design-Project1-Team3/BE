@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -114,6 +115,24 @@ public class UserController {
         }
 
         return ResponseEntity.ok("로그아웃 되었습니다.");
+    }
+
+    //내정보 조회
+    @GetMapping("/me")
+    public ResponseEntity<?> mySetting(@RequestHeader("Authorization") String authHeader) {
+        try {
+            // 1. 토큰에서 내 ID get
+            String token = authHeader.replace("Bearer ", "");
+            String userIdStr = jwtProvider.validateAndGetUserId(token);
+            UUID userId = UUID.fromString(userIdStr);
+
+            // 2. Service 호출
+            UserDto.UserInfo userInfo = userService.getUser(userId);
+            return ResponseEntity.ok(userInfo);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+        }
     }
 
     // 회원 정보 수정
