@@ -3,6 +3,7 @@ package com.server.talkup_be.config;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -20,12 +21,16 @@ public class JwtProvider {
     // 토큰 만료 시간 (1시간)
     private final long EXPIRATION_TIME = 1000L * 60 * 60;
 
+    @Value("${jwt.private-key-path}")
+    private String privateKeyPath;
+
+    @Value("${jwt.public-key-path}")
+    private String publicKeyPath;
+
     @PostConstruct
     public void init() throws Exception {
-        // 서버 실행 시 PEM 파일을 읽어와 객체로 초기화합니다.
-        // 실제 운영 환경에서는 파일 경로 관리에 주의
-        this.privateKey = KeyReader.getPrivateKey("private_key.pem");
-        this.publicKey = KeyReader.getPublicKey("public_key.pem");
+        this.privateKey = KeyReader.getPrivateKey(privateKeyPath);
+        this.publicKey = KeyReader.getPublicKey(publicKeyPath);
     }
 
     // JWT 토큰 생성
