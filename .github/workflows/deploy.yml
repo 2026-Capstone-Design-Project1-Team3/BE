@@ -39,11 +39,11 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
-            PID=$(pgrep -f TalkUp_BE)
+            PID=$(pgrep -x java)
             if [ -n "$PID" ]; then
               kill -15 $PID
               sleep 5
             fi
             
             cd ~/deploy
-            nohup java -jar TalkUp_BE-0.0.1-SNAPSHOT.jar > server.log 2>&1 &
+            nohup java -jar TalkUp_BE-0.0.1-SNAPSHOT.jar > server.log 2>&1 < /dev/null &
