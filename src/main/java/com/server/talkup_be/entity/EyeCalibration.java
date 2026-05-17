@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @EqualsAndHashCode // jpa가 user entity 속 eyeCalibration 비교 가능하도록 해줌
 public class EyeCalibration {
-    private Double leftEyeOffset;
-    private Double rightEyeOffset;
-    private Double ratio;
+    private Float leftEyeOffset;
+    private Float rightEyeOffset;
+    private Float ratio;
 }
