@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class FolderDto {
     @Builder
@@ -21,7 +22,7 @@ public class FolderDto {
     @AllArgsConstructor
     @ToString
     public static class FolderInfo {
-        private String folderId;
+        private UUID folderId;
         private String title;
         private String description;
         private Integer type;

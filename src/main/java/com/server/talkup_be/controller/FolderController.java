@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -70,26 +71,26 @@ public class FolderController {
     }
 
     // 폴더 미리보기 조회
-//    @GetMapping("/folder")
-//    public ResponseEntity<?> getFolder(
-//            @AuthenticationPrincipal String userIdStr,
-//            @RequestParam(required = false) Integer type,
-//            @RequestParam(required = false) Integer limit,
-//            @RequestParam(required = false) Integer page,
-//            @RequestParam(defaultValue = "0") Integer how,
-//            @RequestParam(required = false) String keyWord) {
-//        try {
-//            // 1. 토큰 추출 (프론트가 준 토큰)
-//            UUID userId = UUID.fromString(userIdStr);
-//
-//            // 2. Service 호출
-//            FolderDto.FolderInfo result= folderService.getFolderData(userId,type, limit, page, how, keyWord);
-//            return ResponseEntity.ok().body(result);
-//
-//        } catch (Exception e) {
-//            // 기타
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body("폴더 조회 중 오류가 발생했습니다.");
-//        }
-//    }
+    @GetMapping("/folder")
+    public ResponseEntity<?> getFolder(
+            @AuthenticationPrincipal String userIdStr,
+            @RequestParam(required = false) Integer type,
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(defaultValue = "0") Integer how,
+            @RequestParam(required = false) String keyWord) {
+        try {
+            // 1. 토큰 추출 (프론트가 준 토큰)
+            UUID userId = UUID.fromString(userIdStr);
+
+            // 2. Service 호출
+            List<FolderDto.FolderInfo> result= folderService.getFolderData(userId,type, limit, page, how, keyWord);
+            return ResponseEntity.ok().body(result);
+
+        } catch (Exception e) {
+            // 기타
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("폴더 조회 중 오류가 발생했습니다.");
+        }
+    }
 }

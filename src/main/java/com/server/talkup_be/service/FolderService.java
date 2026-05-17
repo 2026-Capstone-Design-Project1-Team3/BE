@@ -3,8 +3,12 @@ package com.server.talkup_be.service;
 import com.server.talkup_be.dto.FolderDto;
 import com.server.talkup_be.entity.Folder;
 import com.server.talkup_be.repo.FolderRepo;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -40,21 +44,40 @@ public class FolderService {
 
     //폴더 페이지 수 반환
     public FolderDto.FolderPageCount getFolderTotal(UUID userId, Integer type, Integer limit, String keyWord) {
-        int pageSize = (limit == null) ? 1 : limit;
+        // 키워드 % 추가
+        String processedKeyWord = null;
+        if (keyWord != null && !keyWord.isEmpty()) {
+            processedKeyWord = "%" + keyWord + "%";
+        }
+
         // 전체 개수 및 총 페이지 수 계산
-        int totalElements = folderRepo.countFilteredFolders(userId.toString(), type, keyWord);
+        int totalElements = folderRepo.countFilteredFolders(userId.toString(), type, processedKeyWord);
+        int pageSize = (limit == null) ? totalElements : limit;
         int totalPages = (int)Math.ceil((double)totalElements / (double)pageSize);
         FolderDto.FolderPageCount findFolderpage = new FolderDto.FolderPageCount(totalElements,totalPages);
         return findFolderpage;
     }
 
     //폴더 미리보기 반환
-//    public FolderDto.FolderInfo getFolderData(UUID userId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
-//        int pageSize = (limit == null || page == null) ? 5 : limit;
-//        // 전체 개수 및 총 페이지 수 계산
-//        int totalElements = folderRepo.countFilteredFolders(type, keyWord);
-//        int totalPages = (int)Math.ceil((double)totalElements / (double)pageSize);
-//        FolderDto.FolderInfo findFolderInfo = new FolderDto.FolderInfo(?);
-//        return findFolderInfo;
-//    }
+    public List<FolderDto.FolderInfo> getFolderData(UUID userId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
+        // 키워드 % 추가
+        String processedKeyWord = null;
+        if (keyWord != null && !keyWord.isEmpty()) {
+            processedKeyWord = "%" + keyWord + "%";
+        }
+
+        int pageSize = (limit == null || limit <= 0) ? Integer.MAX_VALUE : limit;
+        int pageNum = (page == null || page <= 0) ? 1 : page;
+
+        // how == 0이면 최신순, how==1이면 날짜순
+        Sort sort = (how != null && how == 1)
+                ? Sort.by(Sort.Direction.ASC, "createdAt")
+                : Sort.by(Sort.Direction.DESC, "createdAt");
+
+        // Pageable 생성
+        Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
+
+        List<FolderDto.FolderInfo> entityList;
+        return folderRepo.findFolders(userId.toString(), type, processedKeyWord,pageable);
+    }
 }
