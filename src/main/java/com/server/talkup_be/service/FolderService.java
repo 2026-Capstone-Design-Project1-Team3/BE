@@ -37,4 +37,24 @@ public class FolderService {
 
         folderRepo.save(newFolder);
     }
+
+    //폴더 페이지 수 반환
+    public FolderDto.FolderPageCount getFolderTotal(UUID userId, Integer type, Integer limit, String keyWord) {
+        int pageSize = (limit == null) ? 1 : limit;
+        // 전체 개수 및 총 페이지 수 계산
+        int totalElements = folderRepo.countFilteredFolders(userId.toString(), type, keyWord);
+        int totalPages = (int)Math.ceil((double)totalElements / (double)pageSize);
+        FolderDto.FolderPageCount findFolderpage = new FolderDto.FolderPageCount(totalElements,totalPages);
+        return findFolderpage;
+    }
+
+    //폴더 미리보기 반환
+//    public FolderDto.FolderInfo getFolderData(UUID userId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
+//        int pageSize = (limit == null || page == null) ? 5 : limit;
+//        // 전체 개수 및 총 페이지 수 계산
+//        int totalElements = folderRepo.countFilteredFolders(type, keyWord);
+//        int totalPages = (int)Math.ceil((double)totalElements / (double)pageSize);
+//        FolderDto.FolderInfo findFolderInfo = new FolderDto.FolderInfo(?);
+//        return findFolderInfo;
+//    }
 }

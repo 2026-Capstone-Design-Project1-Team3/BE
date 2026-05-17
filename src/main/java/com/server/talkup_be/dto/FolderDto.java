@@ -11,6 +11,15 @@ public class FolderDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @ToString
+    public static class FolderPageCount {
+        private Integer totalElements;
+        private Integer totalPages;
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
     public static class FolderInfo {
         private String folderId;
         private String title;
