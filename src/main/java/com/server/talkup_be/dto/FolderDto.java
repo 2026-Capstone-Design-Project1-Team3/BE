@@ -1,0 +1,38 @@
+package com.server.talkup_be.dto;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+public class FolderDto {
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public static class FolderInfo {
+        private String folderId;
+        private String title;
+        private String description;
+        private Integer type;
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd", timezone = "Asia/Seoul")
+        private LocalDateTime createdAt;
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public static class FolderInput {
+        private String title;
+        private String description;
+        private String fileName;
+        private String fileKey;
+        private String extraInfo;
+        private String companyName;
+        private String inputText;
+        private Integer type;
+    }
+}

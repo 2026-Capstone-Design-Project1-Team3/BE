@@ -200,7 +200,7 @@ public class UserController {
             String userIdStr = jwtProvider.validateAndGetUserId(token);
             UUID userId = UUID.fromString(userIdStr);
 
-            // 3. Service 호출
+            // 2. Service 호출
             userService.saveUserEyeData(userId, userEye);
 
             return ResponseEntity.ok().body("시선 보정값이 성공적으로 설정되었습니다.");
