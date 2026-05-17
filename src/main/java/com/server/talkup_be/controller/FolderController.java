@@ -41,10 +41,12 @@ public class FolderController {
 
             return ResponseEntity.ok().body("폴더 생성이 성공적으로 설정되었습니다.");
 
+        }  catch (IllegalArgumentException | IllegalStateException e) {
+            // 프론트가 값을 잘못 보냈거나 권한이 없을 때 (400 or 403)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
-            // 기타
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("폴더 생성 중 오류가 발생했습니다.");
+            // 서버나 DB가 터졌을 때 (500)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
         }
     }
 
@@ -63,10 +65,12 @@ public class FolderController {
             FolderDto.FolderPageCount result= folderService.getFolderTotal(userId,type, limit, keyWord);
             return ResponseEntity.ok().body(result);
 
+        }  catch (IllegalArgumentException | IllegalStateException e) {
+            // 프론트가 값을 잘못 보냈거나 권한이 없을 때 (400 or 403)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
-            // 기타
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("폴더 조회 중 오류가 발생했습니다.");
+            // 서버나 DB가 터졌을 때 (500)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
         }
     }
 
@@ -87,10 +91,34 @@ public class FolderController {
             List<FolderDto.FolderInfo> result= folderService.getFolderData(userId,type, limit, page, how, keyWord);
             return ResponseEntity.ok().body(result);
 
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            // 프론트가 값을 잘못 보냈거나 권한이 없을 때 (400 or 403)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
-            // 기타
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("폴더 조회 중 오류가 발생했습니다.");
+            // 서버나 DB가 터졌을 때 (500)
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
+        }
+    }
+
+    // 폴더 삭제
+    @PostMapping("/folder/delete")
+    public ResponseEntity<?> setFolder(
+            @AuthenticationPrincipal String userIdStr,
+            @RequestBody FolderDto.FolderDeleteList folderIds) {
+        try {
+            // 1. 토큰 추출 (프론트가 준 토큰)
+            UUID userId = UUID.fromString(userIdStr);
+
+            // 2. Service 호출
+            folderService.deleteFolder(userId, folderIds.getFolderId());
+
+            return ResponseEntity.ok().body("폴더 삭제가 성공적으로 설정되었습니다.");
+        } catch (IllegalStateException e){
+            // 권한 없는 폴더 삭제 요청(403)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // 프론트가 값을 잘못 보냈거나 권한이 없을 때 (400 or 403)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -79,5 +80,26 @@ public class FolderService {
 
         List<FolderDto.FolderInfo> entityList;
         return folderRepo.findFolders(userId.toString(), type, processedKeyWord,pageable);
+    }
+
+    @Transactional
+    public void deleteFolder(UUID userId, List<UUID> folderIds) {
+        //빈 배열일 경우
+        if (folderIds == null || folderIds.isEmpty()) {
+            throw new IllegalArgumentException("삭제할 폴더가 선택되지 않았습니다.");
+        }
+
+        // userId와 관련된 folder 전부 호출
+        List<Folder> folders = folderRepo.findAllById(folderIds);
+
+        // user의 폴더들을 하나씩 검사
+        for (Folder folder : folders) {
+            // 남의 폴더 삭제 요청시 차단
+            if (!folder.getUserId().equals(userId.toString())) {
+                throw new IllegalStateException("삭제 권한이 없는 폴더가 포함되어 있습니다.");
+            }
+        }
+
+        folderRepo.deleteAll(folders);
     }
 }

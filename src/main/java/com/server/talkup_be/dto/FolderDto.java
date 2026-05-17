@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public class FolderDto {
@@ -44,5 +45,13 @@ public class FolderDto {
         private String companyName;
         private String inputText;
         private Integer type;
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public static class FolderDeleteList {
+        private List<UUID> folderId;
     }
 }
