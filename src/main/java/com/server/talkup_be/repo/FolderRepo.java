@@ -1,12 +1,34 @@
 package com.server.talkup_be.repo;
 
+import com.server.talkup_be.dto.FolderDto;
 import com.server.talkup_be.entity.Folder;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface FolderRepo extends JpaRepository<Folder, UUID> {
+    // 전체 개수 조회 (totalPages 계산용)
+    @Query(value = "SELECT COUNT(*) FROM folder f WHERE " +
+            "(:type IS NULL OR f.type = :type) AND " +
+            "(:keyWord IS NULL OR LOWER(f.title) LIKE LOWER(:keyWord)) AND " +
+            "f.user_Id = :userId", nativeQuery = true)
+    Integer countFilteredFolders(String userId, Integer type, String keyWord);
 
+    // 연습기록 미리보기 조회
+    @Query("SELECT new com.server.talkup_be.dto.FolderDto$FolderInfo(" +
+            "f.id, f.title, f.description, f.type, f.createdAt) " +
+            "FROM Folder f WHERE " +
+            "f.userId = :userId AND " +
+            "(:type IS NULL OR f.type = :type) AND " +
+            "(:keyWord IS NULL OR f.title LIKE :keyWord)")
+    List<FolderDto.FolderInfo> findFolders(@Param("userId") String userId,
+                                           @Param("type") Integer type,
+                                           @Param("keyWord") String keyWord,
+                                           Pageable pageable);
 }
