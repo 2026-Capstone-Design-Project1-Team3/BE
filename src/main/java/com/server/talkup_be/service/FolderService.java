@@ -2,6 +2,7 @@ package com.server.talkup_be.service;
 
 import com.server.talkup_be.dto.FolderDto;
 import com.server.talkup_be.entity.Folder;
+import com.server.talkup_be.repo.AnalysisRepo;
 import com.server.talkup_be.repo.FolderRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,9 +16,11 @@ import java.util.UUID;
 @Service
 public class FolderService {
     private final FolderRepo folderRepo;
+    private final AnalysisRepo analysisRepo;
 
-    public FolderService(FolderRepo folderRepo) {
+    public FolderService(FolderRepo folderRepo, AnalysisRepo analysisRepo) {
         this.folderRepo = folderRepo;
+        this.analysisRepo = analysisRepo;
     }
 
     //폴더 생성
@@ -53,7 +56,7 @@ public class FolderService {
 
         // 전체 개수 및 총 페이지 수 계산
         int totalElements = folderRepo.countFilteredFolders(userId.toString(), type, processedKeyWord);
-        int pageSize = (limit == null) ? totalElements : limit;
+        int pageSize = (limit == null || limit == 0) ? totalElements : limit;
         int totalPages = (int)Math.ceil((double)totalElements / (double)pageSize);
         FolderDto.FolderPageCount findFolderpage = new FolderDto.FolderPageCount(totalElements,totalPages);
         return findFolderpage;
@@ -79,9 +82,10 @@ public class FolderService {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
 
         List<FolderDto.FolderInfo> entityList;
-        return folderRepo.findFolders(userId.toString(), type, processedKeyWord,pageable);
+        return folderRepo.findFolders(userId.toString(), type, processedKeyWord, pageable);
     }
 
+    //폴더 삭제
     @Transactional
     public void deleteFolder(UUID userId, List<UUID> folderIds) {
         //빈 배열일 경우
@@ -89,8 +93,18 @@ public class FolderService {
             throw new IllegalArgumentException("삭제할 폴더가 선택되지 않았습니다.");
         }
 
-        // userId와 관련된 folder 전부 호출
+        // 관련된 folder 전부 호출
         List<Folder> folders = folderRepo.findAllById(folderIds);
+
+        // 없는 folder라면?
+        if (folders.size() != folderIds.size()) {
+            throw new IllegalArgumentException("존재하지 않거나 이미 삭제된 폴더가 포함되어 있습니다.");
+        }
+
+        // folder의 id만 list<String>화
+        List<String> folderIdStrs = folderIds.stream()
+                .map(UUID::toString)
+                .toList();
 
         // user의 폴더들을 하나씩 검사
         for (Folder folder : folders) {
@@ -100,6 +114,27 @@ public class FolderService {
             }
         }
 
+        // 관련 analysis 지우기
+        if (!folderIdStrs.isEmpty()) {
+            analysisRepo.deleteByFolderIdIn(folderIdStrs);
+        }
+
+        // folder 지우기
         folderRepo.deleteAll(folders);
+    }
+
+    // userId와 관련된 Folder들의 id
+    @Transactional
+    public void deleteAllFoldersByUserId(UUID userId) {
+        List<Folder> userFolders = folderRepo.findAllByUserId(userId.toString());
+
+        if (!userFolders.isEmpty()) {
+            // Entity의 Id(UUID)로 list
+            List<UUID> folderIds = userFolders.stream()
+                    .map(Folder::getId)
+                    .toList();
+
+            this.deleteFolder(userId, folderIds);
+        }
     }
 }

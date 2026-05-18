@@ -73,8 +73,8 @@ public class UserDto {
     @AllArgsConstructor
     @ToString
     public static class UserEye {
-        private Double leftEyeOffset;
-        private Double rightEyeOffset;
-        private Double ratio;
+        private Float leftEyeOffset;
+        private Float rightEyeOffset;
+        private Float ratio;
     }
 }

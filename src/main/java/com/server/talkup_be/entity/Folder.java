@@ -28,7 +28,6 @@ public class Folder {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
     private String description;
 
     @Column(nullable = false)
@@ -40,13 +39,10 @@ public class Folder {
     @Column(nullable = false)
     private String extraInfo;
 
-    @Column(nullable = false)
     private String companyName;
 
-    @Column(nullable = false)
     private String outputText;
 
-    @Column(nullable = false)
     private String inputText;
 
     @Column(nullable = false)
