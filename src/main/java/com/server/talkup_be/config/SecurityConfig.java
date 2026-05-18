@@ -56,6 +56,8 @@ public class SecurityConfig {
                         .requestMatchers("/user/signUp", "/user/login", "/user/check/**",
                                         "/swagger-ui/**", "/v3/api-docs/**"
                         ).permitAll()
+                        // 에러 확인 - 전부 개발 후 지우기
+                        .requestMatchers("/error").permitAll()
                         // 그 외는 토큰 필요
                         .anyRequest().authenticated()
                 )

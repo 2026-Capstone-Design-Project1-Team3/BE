@@ -79,7 +79,7 @@ public class FolderService {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
 
         List<FolderDto.FolderInfo> entityList;
-        return folderRepo.findFolders(userId.toString(), type, processedKeyWord,pageable);
+        return folderRepo.findFolders(userId.toString(), type, processedKeyWord, pageable);
     }
 
     @Transactional

@@ -28,10 +28,13 @@ public class AnalysisDto {
     @AllArgsConstructor
     @ToString
     public static class AnalysisCardnews {
-        private String analysisId;
+        private UUID analysisId;
         private String title;
         private String description;
         private Integer type;
+
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd", timezone = "Asia/Seoul")
+        private LocalDateTime createdAt;
     }
     @Builder
     @Getter
@@ -81,7 +84,7 @@ public class AnalysisDto {
     @AllArgsConstructor
     @ToString
     public static class AnalysisInfo {
-        private String analysisId;
+        private UUID analysisId;
         private String folderId;
         private String title;
         private String description;
