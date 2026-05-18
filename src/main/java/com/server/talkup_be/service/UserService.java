@@ -5,7 +5,6 @@ import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.entity.User;
 import com.server.talkup_be.exception.MissingCalibrationException;
 import com.server.talkup_be.repo.UserRepo;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,10 +16,12 @@ import java.util.UUID;
 public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepo userRepo;
+    private final FolderService folderService;
 
-    public UserService(PasswordEncoder passwordEncoder, UserRepo userRepo) {
+    public UserService(PasswordEncoder passwordEncoder, UserRepo userRepo, FolderService folderService) {
         this.passwordEncoder = passwordEncoder;
         this.userRepo = userRepo;
+        this.folderService = folderService;
     }
 
     // user login 확인
@@ -132,6 +133,14 @@ public class UserService {
     // user 삭제
 //    @Transactional
 //    public void deleteUser(UUID userId) {
-//        folderRepo.
+//        // user 존재 유무 확인
+//        User user = userRepo.findById(userId)
+//                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+//
+//        // 관련 folder 및 analysis 삭제
+//        folderService.deleteAllFoldersByUserId(userId);
+//
+//        // user 삭제
+//        userRepo.deleteById(userId);
 //    }
 }

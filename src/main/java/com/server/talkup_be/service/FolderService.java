@@ -92,8 +92,13 @@ public class FolderService {
             throw new IllegalArgumentException("삭제할 폴더가 선택되지 않았습니다.");
         }
 
-        // userId와 관련된 folder 전부 호출
+        // 관련된 folder 전부 호출
         List<Folder> folders = folderRepo.findAllById(folderIds);
+
+        // 없는 folder라면?
+        if (folders.size() != folderIds.size()) {
+            throw new IllegalArgumentException("존재하지 않거나 이미 삭제된 폴더가 포함되어 있습니다.");
+        }
 
         // folder의 id만 list<String>화
         List<String> folderIdStrs = folderIds.stream()
