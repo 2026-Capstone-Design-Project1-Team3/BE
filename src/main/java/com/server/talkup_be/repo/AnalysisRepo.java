@@ -33,6 +33,7 @@ public interface AnalysisRepo extends JpaRepository<Analysis, UUID> {
             "(:keyWord IS NULL OR a.title LIKE :keyWord)")
     List<AnalysisDto.AnalysisCardnews> findAnalyses(String userId, String folderId, Integer type, String keyWord, Pageable pageable);
 
+    // 연습기록 삭제
     @Modifying
     @Transactional
     @Query("DELETE FROM Analysis a WHERE a.folderId IN :folderIds")

@@ -85,6 +85,7 @@ public class FolderService {
         return folderRepo.findFolders(userId.toString(), type, processedKeyWord, pageable);
     }
 
+    //폴더 삭제
     @Transactional
     public void deleteFolder(UUID userId, List<UUID> folderIds) {
         //빈 배열일 경우

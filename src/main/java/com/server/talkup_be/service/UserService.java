@@ -131,16 +131,16 @@ public class UserService {
     }
 
     // user 삭제
-//    @Transactional
-//    public void deleteUser(UUID userId) {
-//        // user 존재 유무 확인
-//        User user = userRepo.findById(userId)
-//                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
-//
-//        // 관련 folder 및 analysis 삭제
-//        folderService.deleteAllFoldersByUserId(userId);
-//
-//        // user 삭제
-//        userRepo.deleteById(userId);
-//    }
+    @Transactional
+    public void deleteUser(UUID userId) {
+        // user 존재 유무 확인
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // 관련 folder 및 analysis 삭제
+        folderService.deleteAllFoldersByUserId(userId);
+
+        // user 삭제
+        userRepo.deleteById(userId);
+    }
 }
