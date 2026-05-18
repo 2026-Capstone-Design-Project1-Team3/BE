@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Repository
 public interface UserRepo extends JpaRepository<User, UUID> {
-    //고유id로 user정보 반환
+    //고유 id로 user정보 반환
     Optional<User> findById(UUID id);
 
     // loginId 중복 체크 및 로그인시 필요
