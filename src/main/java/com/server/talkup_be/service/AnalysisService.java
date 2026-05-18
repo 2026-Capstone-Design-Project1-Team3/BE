@@ -1,6 +1,7 @@
 package com.server.talkup_be.service;
 
 import com.server.talkup_be.dto.AnalysisDto;
+import com.server.talkup_be.entity.Analysis;
 import com.server.talkup_be.repo.AnalysisRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +36,7 @@ public class AnalysisService {
     }
 
     // 연습기록 간이(미리보기) 조회
-    public List<AnalysisDto.AnalysisCardnews> getAnalysisData(UUID userId, String folderId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
+    public List<AnalysisDto.AnalysisCardnews> getAnalysisCardnewsData(UUID userId, String folderId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
         // 키워드 % 추가
         String processedKeyWord = null;
         if (keyWord != null && !keyWord.isEmpty()) {
@@ -55,5 +56,36 @@ public class AnalysisService {
 
         List<AnalysisDto.AnalysisInfo> entityList;
         return analysisRepo.findAnalyses(userId.toString(), folderId, type, processedKeyWord, pageable);
+    }
+
+    public AnalysisDto.AnalysisInfo getAnalysisData(UUID userId, UUID analysisId) {
+
+        Analysis analysis = analysisRepo.findById(analysisId).orElseThrow(() -> new IllegalArgumentException("해당 연습 기록을 찾을 수 없습니다."));
+
+        // 남의 연습기록 조회 요청시 차단
+        if (!analysis.getUserId().equals(userId.toString())) {
+            throw new IllegalStateException("조회 권한이 없는 연습기록이 포함되어 있습니다.");
+        }
+        return AnalysisDto.AnalysisInfo.builder()
+                .analysisId(analysisId)
+                .folderId(analysis.getFolderId())
+                .title(analysis.getTitle())
+                .description(analysis.getDescription())
+                .type(analysis.getType())
+                .summary(analysis.getSummary())
+                .createdAt(analysis.getCreatedAt())
+                .gazeScore(analysis.getGazeScore())
+                .gazeDistribution(analysis.getGazeDistribution())
+                .gazeFeedback(analysis.getGazeFeedback())
+                .fluencyLevel(analysis.getFluencyLevel())
+                .fluencyFeedback(analysis.getFluencyFeedback())
+                .speedScore(analysis.getSpeedScore())
+                .speedDistribution(analysis.getSpeedDistribution())
+                .speedFeedback(analysis.getSpeedFeedback())
+                .nonverbalFeedback(analysis.getNonverbalFeedback())
+                .finalScore(analysis.getFinalScore())
+                .finalFeedback(analysis.getFinalFeedback())
+                .transcript(analysis.getTranscript())
+                .build();
     }
 }
