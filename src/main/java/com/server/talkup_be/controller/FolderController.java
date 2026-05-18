@@ -16,19 +16,16 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
+@RequestMapping("/folder")
 public class FolderController {
-    private final JwtProvider jwtProvider;
-    private final RedisBlacklistService redisBlacklistService;
     private final FolderService folderService;
 
-    public FolderController(JwtProvider jwtProvider, RedisBlacklistService redisBlacklistService, FolderService folderService) {
-        this.jwtProvider = jwtProvider;
-        this.redisBlacklistService = redisBlacklistService;
+    public FolderController(FolderService folderService) {
         this.folderService = folderService;
     }
 
     // 폴더 생성
-    @PostMapping("/folder")
+    @PostMapping("")
     public ResponseEntity<?> setFolder(
             @AuthenticationPrincipal String userIdStr,
             @RequestBody FolderDto.FolderInput folderInput) {
@@ -51,7 +48,7 @@ public class FolderController {
     }
 
     // 폴더 미리보기 개수 조회
-    @GetMapping("/folder/total")
+    @GetMapping("/total")
     public ResponseEntity<?> getFolderTotal(
             @AuthenticationPrincipal String userIdStr,
             @RequestParam(required = false) Integer type,
@@ -75,7 +72,7 @@ public class FolderController {
     }
 
     // 폴더 미리보기 조회
-    @GetMapping("/folder")
+    @GetMapping("")
     public ResponseEntity<?> getFolder(
             @AuthenticationPrincipal String userIdStr,
             @RequestParam(required = false) Integer type,
@@ -101,7 +98,7 @@ public class FolderController {
     }
 
     // 폴더 삭제
-    @PostMapping("/folder/delete")
+    @PostMapping("/delete")
     public ResponseEntity<?> setFolder(
             @AuthenticationPrincipal String userIdStr,
             @RequestBody FolderDto.FolderDeleteList folderIds) {
