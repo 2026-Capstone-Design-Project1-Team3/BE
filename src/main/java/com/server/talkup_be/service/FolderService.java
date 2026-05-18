@@ -53,7 +53,7 @@ public class FolderService {
 
         // 전체 개수 및 총 페이지 수 계산
         int totalElements = folderRepo.countFilteredFolders(userId.toString(), type, processedKeyWord);
-        int pageSize = (limit == null) ? totalElements : limit;
+        int pageSize = (limit == null || limit == 0) ? totalElements : limit;
         int totalPages = (int)Math.ceil((double)totalElements / (double)pageSize);
         FolderDto.FolderPageCount findFolderpage = new FolderDto.FolderPageCount(totalElements,totalPages);
         return findFolderpage;
@@ -79,7 +79,7 @@ public class FolderService {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
 
         List<FolderDto.FolderInfo> entityList;
-        return folderRepo.findFolders(userId.toString(), type, processedKeyWord,pageable);
+        return folderRepo.findFolders(userId.toString(), type, processedKeyWord, pageable);
     }
 
     @Transactional
