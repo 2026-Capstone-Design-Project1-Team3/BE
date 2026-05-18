@@ -99,7 +99,7 @@ public class FolderController {
 
     // 폴더 삭제
     @PostMapping("/delete")
-    public ResponseEntity<?> setFolder(
+    public ResponseEntity<?> deleteFolder(
             @AuthenticationPrincipal String userIdStr,
             @RequestBody FolderDto.FolderDeleteList folderIds) {
         try {

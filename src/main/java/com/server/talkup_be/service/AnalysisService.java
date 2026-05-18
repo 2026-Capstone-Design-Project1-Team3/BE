@@ -2,11 +2,13 @@ package com.server.talkup_be.service;
 
 import com.server.talkup_be.dto.AnalysisDto;
 import com.server.talkup_be.entity.Analysis;
+import com.server.talkup_be.entity.Folder;
 import com.server.talkup_be.repo.AnalysisRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -87,5 +89,26 @@ public class AnalysisService {
                 .finalFeedback(analysis.getFinalFeedback())
                 .transcript(analysis.getTranscript())
                 .build();
+    }
+
+    @Transactional
+    public void deleteAnalysis(UUID userId, List<UUID> analysisIds) {
+        //빈 배열일 경우
+        if (analysisIds == null || analysisIds.isEmpty()) {
+            throw new IllegalArgumentException("삭제할 연습기록이 선택되지 않았습니다.");
+        }
+
+        // userId와 관련된 analysis 전부 호출
+        List<Analysis> analyses = analysisRepo.findAllById(analysisIds);
+
+        // user의 연습기록들을 하나씩 검사
+        for (Analysis analysis : analyses) {
+            // 남의 연습기록 삭제 요청시 차단
+            if (!analysis.getUserId().equals(userId.toString())) {
+                throw new IllegalStateException("삭제 권한이 없는 연습기록이 포함되어 있습니다.");
+            }
+        }
+
+        analysisRepo.deleteAll(analyses);
     }
 }
