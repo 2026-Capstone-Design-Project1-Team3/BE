@@ -31,4 +31,6 @@ public interface FolderRepo extends JpaRepository<Folder, UUID> {
                                            @Param("type") Integer type,
                                            @Param("keyWord") String keyWord,
                                            Pageable pageable);
+
+    List<Folder> findAllByUserId(String string);
 }

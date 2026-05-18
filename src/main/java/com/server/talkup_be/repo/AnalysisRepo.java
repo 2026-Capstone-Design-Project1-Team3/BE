@@ -2,10 +2,13 @@ package com.server.talkup_be.repo;
 
 import com.server.talkup_be.dto.AnalysisDto;
 import com.server.talkup_be.entity.Analysis;
+import com.server.talkup_be.entity.Folder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,4 +32,9 @@ public interface AnalysisRepo extends JpaRepository<Analysis, UUID> {
             "(:type IS NULL OR a.type = :type) AND " +
             "(:keyWord IS NULL OR a.title LIKE :keyWord)")
     List<AnalysisDto.AnalysisCardnews> findAnalyses(String userId, String folderId, Integer type, String keyWord, Pageable pageable);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Analysis a WHERE a.folderId IN :folderIds")
+    void deleteByFolderIdIn(List<String> folderIds);
 }

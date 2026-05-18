@@ -215,4 +215,24 @@ public class UserController {
                     .body("시선 보정값 설정 중 오류가 발생했습니다.");
         }
     }
+
+    // user 삭제
+//    @DeleteMapping("/delete")
+//    public ResponseEntity<?> delete(@AuthenticationPrincipal String userIdStr) {
+//        try {
+//            // 1. 토큰 추출 (프론트가 준 토큰)
+//            UUID userId = UUID.fromString(userIdStr);
+//
+//            // 2. Service 호출
+//            userService.deleteUser(userId);
+//
+//            return ResponseEntity.ok().body("유저 삭제가 성공적으로 완료되었습니다.");
+//        } catch (IllegalStateException e){
+//            // 권한 없는 폴더 삭제 요청(403)
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+//        } catch (IllegalArgumentException e) {
+//            // 프론트가 값을 잘못 보냈거나 권한이 없을 때 (400 or 403)
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+//        }
+//    }
 }

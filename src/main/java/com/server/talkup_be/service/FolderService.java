@@ -2,6 +2,7 @@ package com.server.talkup_be.service;
 
 import com.server.talkup_be.dto.FolderDto;
 import com.server.talkup_be.entity.Folder;
+import com.server.talkup_be.repo.AnalysisRepo;
 import com.server.talkup_be.repo.FolderRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,9 +16,11 @@ import java.util.UUID;
 @Service
 public class FolderService {
     private final FolderRepo folderRepo;
+    private final AnalysisRepo analysisRepo;
 
-    public FolderService(FolderRepo folderRepo) {
+    public FolderService(FolderRepo folderRepo, AnalysisRepo analysisRepo) {
         this.folderRepo = folderRepo;
+        this.analysisRepo = analysisRepo;
     }
 
     //폴더 생성
@@ -92,6 +95,11 @@ public class FolderService {
         // userId와 관련된 folder 전부 호출
         List<Folder> folders = folderRepo.findAllById(folderIds);
 
+        // folder의 id만 list<String>화
+        List<String> folderIdStrs = folderIds.stream()
+                .map(UUID::toString)
+                .toList();
+
         // user의 폴더들을 하나씩 검사
         for (Folder folder : folders) {
             // 남의 폴더 삭제 요청시 차단
@@ -100,6 +108,27 @@ public class FolderService {
             }
         }
 
+        // 관련 analysis 지우기
+        if (!folderIdStrs.isEmpty()) {
+            analysisRepo.deleteByFolderIdIn(folderIdStrs);
+        }
+
+        // folder 지우기
         folderRepo.deleteAll(folders);
+    }
+
+    // userId와 관련된 Folder들의 id
+    @Transactional
+    public void deleteAllFoldersByUserId(UUID userId) {
+        List<Folder> userFolders = folderRepo.findAllByUserId(userId.toString());
+
+        if (!userFolders.isEmpty()) {
+            // Entity의 Id(UUID)로 list
+            List<UUID> folderIds = userFolders.stream()
+                    .map(Folder::getId)
+                    .toList();
+
+            this.deleteFolder(userId, folderIds);
+        }
     }
 }

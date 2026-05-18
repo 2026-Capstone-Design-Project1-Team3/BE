@@ -128,4 +128,10 @@ public class UserService {
         // 안전장치
         userRepo.save(user);
     }
+
+    // user 삭제
+//    @Transactional
+//    public void deleteUser(UUID userId) {
+//        folderRepo.
+//    }
 }
