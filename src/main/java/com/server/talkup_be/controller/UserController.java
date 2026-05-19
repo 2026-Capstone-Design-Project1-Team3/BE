@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.BindingResult;
 
 import java.util.Date;
 import java.util.UUID;
@@ -121,11 +122,9 @@ public class UserController {
 
     // 내정보 조회
     @GetMapping("/me")
-    public ResponseEntity<?> profile(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> profile(@AuthenticationPrincipal String userIdStr) {
         try {
-            // 1. 토큰에서 내 ID get
-            String token = authHeader.replace("Bearer ", "");
-            String userIdStr = jwtProvider.validateAndGetUserId(token);
+            // 1. 토큰 추출 (프론트가 준 토큰)
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -140,12 +139,16 @@ public class UserController {
     // 회원 정보 수정
     @PatchMapping("")
     public ResponseEntity<String> updateUser(
-            @RequestHeader("Authorization") String authHeader,
-            @RequestBody UserDto.UserUpdate updateDto) {
+            @AuthenticationPrincipal String userIdStr,
+            @RequestBody @Valid UserDto.UserUpdate updateDto,
+            BindingResult bindingResult) {
+        // user 형식에 맞지 않을 시 반환 error
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldError().getDefaultMessage();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+        }
         try {
-            // 1. 토큰에서 내 ID get
-            String token = authHeader.replace("Bearer ", "");
-            String userIdStr = jwtProvider.validateAndGetUserId(token);
+            // 1. 토큰 추출 (프론트가 준 토큰)
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -168,11 +171,9 @@ public class UserController {
 
     // 시선 캘리브레이션 조회
     @GetMapping("/eye")
-    public ResponseEntity<?> EyeProfile(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> EyeProfile(@AuthenticationPrincipal String userIdStr) {
         try {
-            // 1. 토큰에서 내 ID get
-            String token = authHeader.replace("Bearer ", "");
-            String userIdStr = jwtProvider.validateAndGetUserId(token);
+            // 1. 토큰 추출 (프론트가 준 토큰)
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -192,12 +193,10 @@ public class UserController {
     // 시선 보정값 설정
     @PostMapping("/eye")
     public ResponseEntity<?> setEyeCalibration(
-            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal String userIdStr,
             @RequestBody UserDto.UserEye userEye) {
         try {
             // 1. 토큰 추출 (프론트가 준 토큰)
-            String token = authHeader.replace("Bearer ", "");
-            String userIdStr = jwtProvider.validateAndGetUserId(token);
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
