@@ -28,11 +28,11 @@ public class UserService {
     public User validateUser(String loginId, String passWord) {
         // 1. DB에서 유저 찾기
         User user = (User) userRepo.findByLoginId(loginId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 아이디가 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("틀렸다."));
 
         // 2. 비밀번호가 일치하는지 확인(암호화 된 비번과 비교)
         if (!passwordEncoder.matches(passWord, user.getPassWord())) {
-            throw new IllegalArgumentException("비밀번호가 틀렸습니다.");
+            throw new IllegalArgumentException("틀렸다.");
         }
 
         return user;

@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.BindingResult;
 
 import java.util.Date;
 import java.util.UUID;
@@ -139,7 +140,13 @@ public class UserController {
     @PatchMapping("")
     public ResponseEntity<String> updateUser(
             @AuthenticationPrincipal String userIdStr,
-            @RequestBody UserDto.UserUpdate updateDto) {
+            @RequestBody @Valid UserDto.UserUpdate updateDto,
+            BindingResult bindingResult) {
+        // user 형식에 맞지 않을 시 반환 error
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldError().getDefaultMessage();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+        }
         try {
             // 1. 토큰 추출 (프론트가 준 토큰)
             UUID userId = UUID.fromString(userIdStr);

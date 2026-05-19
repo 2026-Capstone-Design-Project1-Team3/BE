@@ -53,8 +53,14 @@ public class UserDto {
     @ToString
     public static class UserUpdate {
         private String pastPassWord; // null 허용
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,16}$",
+                message = "비밀번호는 영문, 숫자, 특수문자를 포함하여 8자~16자로 입력해주세요.")
         private String newPassWord;  // null 허용
+        @Pattern(regexp = "^[가-힣]{2,10}$",
+                message = "이름은 한글 2자~10자로 입력해주세요.")
         private String name;
+        @Email(message = "올바른 이메일 형식이 아닙니다.") // @와 . 포함 확인
+        @Pattern(regexp = "^\\S+$", message = "이메일에 공백이 포함될 수 없습니다.") // 공백 x 확인
         private String email;
     }
     @Builder
