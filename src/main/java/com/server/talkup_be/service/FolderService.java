@@ -32,8 +32,6 @@ public class FolderService {
         Folder newFolder =  Folder.builder()
                 .userId(userId.toString())
                 .title(folderInput.getTitle())
-                .description(folderInput.getDescription())
-                .description(folderInput.getDescription())
                 .fileName(folderInput.getFileName())
                 .fileKey(folderInput.getFileKey())
                 .extraInfo(folderInput.getExtraInfo())
