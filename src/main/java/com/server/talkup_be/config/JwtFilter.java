@@ -23,6 +23,20 @@ public class JwtFilter extends OncePerRequestFilter {
         this.redisBlacklistService = redisBlacklistService;
     }
 
+    // jwt토큰 있어도 요청 가능항 주소
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        // 이 주소들로 들어오는 요청은 헤더에 만료된 토큰이 있든 없든 무조건 통과!
+        return path.startsWith("/user/login") ||
+                path.startsWith("/user/signUp") ||
+                path.startsWith("/user/check") ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/error");
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
@@ -34,6 +48,7 @@ public class JwtFilter extends OncePerRequestFilter {
             // 블랙리스트에 있는 토큰이면 요청 거절!
             if (redisBlacklistService.isBlacklisted(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setCharacterEncoding("UTF-8");
                 response.getWriter().write("로그아웃된 토큰입니다.");
                 return; // 더 이상 진행하지 않고 여기서 차단
             }
