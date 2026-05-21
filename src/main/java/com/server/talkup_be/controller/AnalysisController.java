@@ -23,31 +23,6 @@ public class AnalysisController {
         this.analysisService = analysisService;
     }
 
-    // 연습기록 미리보기 개수 조회
-    @GetMapping("/total")
-    public ResponseEntity<?> getAnalysisTotal(
-            @AuthenticationPrincipal String userIdStr,
-            @RequestParam(required = false) UUID folderId,
-            @RequestParam(required = false) Integer type,
-            @RequestParam(required = false) Integer limit,
-            @RequestParam(required = false) String keyWord) {
-        try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
-            UUID userId = UUID.fromString(userIdStr);
-
-            // 2. Service 호출
-            AnalysisDto.AnalysisPageCount result= analysisService.getAnalysisTotal(userId, folderId, type, limit, keyWord);
-            return ResponseEntity.ok().body(result);
-
-        }  catch (IllegalArgumentException | IllegalStateException e) {
-            // 프론트가 값을 잘못 보냈거나 권한이 없을 때 (400 or 403)
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            // 서버나 DB가 터졌을 때 (500)
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
-        }
-    }
-
     // 연습기록 간이(미리보기) 조회
     @GetMapping("/cardNews")
     public ResponseEntity<?> getAnalysisCardNews(

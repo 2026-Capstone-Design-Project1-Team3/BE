@@ -44,22 +44,6 @@ public class FolderService {
         folderRepo.save(newFolder);
     }
 
-    //폴더 페이지 수 반환
-    public FolderDto.FolderPageCount getFolderTotal(UUID userId, Integer type, Integer limit, String keyWord) {
-        // 키워드 % 추가
-        String processedKeyWord = null;
-        if (keyWord != null && !keyWord.isEmpty()) {
-            processedKeyWord = "%" + keyWord + "%";
-        }
-
-        // 전체 개수 및 총 페이지 수 계산
-        int totalElements = folderRepo.countFilteredFolders(userId, type, processedKeyWord);
-        int pageSize = (limit == null || limit == 0) ? totalElements : limit;
-        int totalPages = (int)Math.ceil((double)totalElements / (double)pageSize);
-        FolderDto.FolderPageCount findFolderpage = new FolderDto.FolderPageCount(totalElements,totalPages);
-        return findFolderpage;
-    }
-
     //폴더 미리보기 반환
     public List<FolderDto.FolderInfo> getFolderData(UUID userId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
         // 키워드 % 추가
