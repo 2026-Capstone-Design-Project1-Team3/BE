@@ -31,9 +31,9 @@ public class Analysis {
     @Column(columnDefinition = "BINARY(16)", updatable = false, nullable = false, unique = true)
     private UUID id;
     @Column(nullable = false)
-    private String userId;
+    private UUID userId;
     @Column(nullable = false)
-    private String folderId;
+    private UUID folderId;
 
     @Column(name = "file_key", nullable = false)
     private String fileKey;

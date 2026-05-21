@@ -23,13 +23,24 @@ public class AnalysisDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @ToString
-    public static class AnalysisCardnews {
-        private UUID analysisId;
-        private String title;
-        private Integer type;
+    public static class AnalysisCardnewsInfo {
+        private Integer total;
 
-        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd", timezone = "Asia/Seoul")
-        private LocalDateTime createdAt;
+        private List<AnalysisCardnews> cardnews;
+
+        @Builder
+        @Getter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @ToString
+        public static class AnalysisCardnews {
+            private UUID analysisId;
+            private String title;
+            private Integer type;
+
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd", timezone = "Asia/Seoul")
+            private LocalDateTime createdAt;
+        }
     }
     @Builder
     @Getter
@@ -58,7 +69,7 @@ public class AnalysisDto {
     @ToString
     public static class AnalysisInfo {
         private UUID analysisId;
-        private String folderId;
+        private UUID folderId;
         private String title;
         private Integer type;
         private String summary;
@@ -77,6 +88,26 @@ public class AnalysisDto {
         private Integer finalScore;
         private String finalFeedback;
         private String transcript;
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public static class AnalysisStatistics {
+        private Integer total;
+
+        private List<StatisticData> statistics;
+
+        @Builder
+        @Getter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @ToString
+        public static class StatisticData {
+            private Integer gazeScore;
+            private Integer speedScore;
+        }
     }
     @Builder
     @Getter
