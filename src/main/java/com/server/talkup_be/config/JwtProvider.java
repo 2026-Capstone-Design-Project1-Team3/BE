@@ -18,8 +18,8 @@ public class JwtProvider {
     private PrivateKey privateKey;
     private PublicKey publicKey;
 
-    // 토큰 만료 시간 (1시간)
-    private final long EXPIRATION_TIME = 1000L * 60 * 60;
+    // 토큰 만료 시간 (6시간)
+    private final long EXPIRATION_TIME = 1000L * 60 * 60 * 6;
 
     @Value("${jwt.private-key-path}")
     private String privateKeyPath;

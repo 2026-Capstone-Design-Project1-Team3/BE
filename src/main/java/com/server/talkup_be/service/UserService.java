@@ -111,9 +111,9 @@ public class UserService {
     }
 
     // user 시선 캘리브레이션 정보 저장
-    public void saveUserEyeData(UUID userId, UserDto.UserEye userEye) {
+    public void saveUserEyeData(UserDto.UserEyeInput userEye) {
         // 1. 내 정보 찾기
-        User user = userRepo.findById(userId)
+        User user = userRepo.findById(userEye.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         // 2. EyeCalibration 객체 생성
