@@ -63,7 +63,7 @@ public class AnalysisController {
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
-            List<AnalysisDto.AnalysisCardnews> result= analysisService.getAnalysisCardnewsData(userId, folderId, type, limit, page, how, keyWord);
+            AnalysisDto.AnalysisCardnewsInfo result= analysisService.getAnalysisCardnewsData(userId, folderId, type, limit, page, how, keyWord);
             return ResponseEntity.ok().body(result);
 
         } catch (IllegalArgumentException | IllegalStateException e) {

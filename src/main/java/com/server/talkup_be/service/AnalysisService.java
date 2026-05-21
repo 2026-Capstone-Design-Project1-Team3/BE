@@ -38,7 +38,7 @@ public class AnalysisService {
     }
 
     // 연습기록 간이(미리보기) 조회
-    public List<AnalysisDto.AnalysisCardnews> getAnalysisCardnewsData(UUID userId, String folderId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
+    public AnalysisDto.AnalysisCardnewsInfo getAnalysisCardnewsData(UUID userId, String folderId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
         // 키워드 % 추가
         String processedKeyWord = null;
         if (keyWord != null && !keyWord.isEmpty()) {
@@ -56,8 +56,11 @@ public class AnalysisService {
         // Pageable 생성
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
 
-        List<AnalysisDto.AnalysisInfo> entityList;
-        return analysisRepo.findAnalyses(userId.toString(), folderId, type, processedKeyWord, pageable);
+        List<AnalysisDto.AnalysisCardnewsInfo.AnalysisCardnews> entityList = analysisRepo.findAnalyses(userId.toString(), folderId, type, processedKeyWord, pageable);
+        return AnalysisDto.AnalysisCardnewsInfo.builder()
+                .total(analysisRepo.countFilteredAnalyses(userId.toString(), folderId, type, processedKeyWord))
+                .cardnews(entityList)
+                .build();
     }
 
     // 연습기록 상세 보기

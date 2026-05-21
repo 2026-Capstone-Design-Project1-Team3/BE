@@ -25,14 +25,14 @@ public interface AnalysisRepo extends JpaRepository<Analysis, UUID> {
     Integer countFilteredAnalyses(String userId, String folderId, Integer type, String keyWord);
 
     // 연습기록 미리보기 조회
-    @Query("SELECT new com.server.talkup_be.dto.AnalysisDto$AnalysisCardnews(" +
+    @Query("SELECT new com.server.talkup_be.dto.AnalysisDto$AnalysisCardnewsInfo$AnalysisCardnews(" +
             "a.id, a.title, a.type, a.createdAt) " +
             "FROM Analysis a WHERE " +
             "a.userId = :userId AND " +
             "(:folderId IS NULL OR a.folderId = :folderId) AND " +
             "(:type IS NULL OR a.type = :type) AND " +
             "(:keyWord IS NULL OR a.title LIKE :keyWord)")
-    List<AnalysisDto.AnalysisCardnews> findAnalyses(String userId, String folderId, Integer type, String keyWord, Pageable pageable);
+    List<AnalysisDto.AnalysisCardnewsInfo.AnalysisCardnews> findAnalyses(String userId, String folderId, Integer type, String keyWord, Pageable pageable);
 
     // userId가 가진 연습기록 전체 개수 반환
     Integer countByUserId(String string);
