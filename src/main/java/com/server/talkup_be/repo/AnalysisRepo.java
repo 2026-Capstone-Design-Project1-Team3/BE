@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,9 +34,23 @@ public interface AnalysisRepo extends JpaRepository<Analysis, UUID> {
             "(:keyWord IS NULL OR a.title LIKE :keyWord)")
     List<AnalysisDto.AnalysisCardnews> findAnalyses(String userId, String folderId, Integer type, String keyWord, Pageable pageable);
 
+    // userId가 가진 연습기록 전체 개수 반환
+    Integer countByUserId(String string);
+
+    // 연습기록 최신 n개 수치들
+    @Query("SELECT new com.server.talkup_be.dto.AnalysisDto$AnalysisStatistics$StatisticData(" +
+            "a.gazeScore, a.speedScore) " +
+            "FROM Analysis a WHERE " +
+            "a.userId = :userId " +
+            "ORDER BY a.createdAt DESC")
+    List<AnalysisDto.AnalysisStatistics.StatisticData> findStatistics(
+            @Param("userId") String userId,
+            Pageable pageable
+    );
     // 연습기록 삭제
     @Modifying
     @Transactional
     @Query("DELETE FROM Analysis a WHERE a.folderId IN :folderIds")
     void deleteByFolderIdIn(List<String> folderIds);
+
 }

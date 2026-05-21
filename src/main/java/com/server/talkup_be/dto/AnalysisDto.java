@@ -83,6 +83,26 @@ public class AnalysisDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @ToString
+    public static class AnalysisStatistics {
+        private Integer total;
+
+        private List<StatisticData> statistics;
+
+        @Builder
+        @Getter
+        @NoArgsConstructor
+        @AllArgsConstructor
+        @ToString
+        public static class StatisticData {
+            private Integer gazeScore;
+            private Integer speedScore;
+        }
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
     public static class AnalysisDeleteList {
         private List<UUID> analysisId;
     }

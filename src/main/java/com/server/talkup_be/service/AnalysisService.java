@@ -90,6 +90,22 @@ public class AnalysisService {
                 .build();
     }
 
+    // 연습기록 최신 N개 피드백 수치 조회
+    public AnalysisDto.AnalysisStatistics getAnalysisNData(UUID userId, Integer limit) {
+        // limit 파라미터 유무에 따라 Pageable 객체 생성
+        Pageable pageable = (limit != null && limit > 0)
+                ? PageRequest.of(0, limit)
+                : Pageable.unpaged();
+
+        Integer totalCount = analysisRepo.countByUserId(userId.toString());
+        List<AnalysisDto.AnalysisStatistics.StatisticData> statsList = analysisRepo.findStatistics(userId.toString(),pageable);
+
+        return AnalysisDto.AnalysisStatistics.builder()
+                .total(totalCount)
+                .statistics(statsList)
+                .build();
+    }
+
     // 연습기록 삭제
     @Transactional
     public void deleteAnalysis(UUID userId, List<UUID> analysisIds) {
@@ -111,4 +127,5 @@ public class AnalysisService {
 
         analysisRepo.deleteAll(analyses);
     }
+
 }
