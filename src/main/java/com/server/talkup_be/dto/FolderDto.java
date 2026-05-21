@@ -29,6 +29,8 @@ public class FolderDto {
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd", timezone = "Asia/Seoul")
         private LocalDateTime updatedAt;
+
+        private Long totalAnalyses;
     }
     @Builder
     @Getter

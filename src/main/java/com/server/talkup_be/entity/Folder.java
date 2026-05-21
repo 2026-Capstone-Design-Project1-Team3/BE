@@ -19,7 +19,7 @@ public class Folder {
     @Column(columnDefinition = "BINARY(16)", updatable = false, nullable = false, unique = true)
     private UUID id;
     @Column(nullable = false)
-    private String userId;
+    private UUID userId;
 
     @Column(nullable = false)
     private String title;

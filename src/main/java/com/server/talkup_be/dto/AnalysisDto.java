@@ -69,7 +69,7 @@ public class AnalysisDto {
     @ToString
     public static class AnalysisInfo {
         private UUID analysisId;
-        private String folderId;
+        private UUID folderId;
         private String title;
         private Integer type;
         private String summary;

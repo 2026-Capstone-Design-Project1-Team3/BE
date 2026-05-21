@@ -27,7 +27,7 @@ public class AnalysisController {
     @GetMapping("/total")
     public ResponseEntity<?> getAnalysisTotal(
             @AuthenticationPrincipal String userIdStr,
-            @RequestParam(required = false) String folderId,
+            @RequestParam(required = false) UUID folderId,
             @RequestParam(required = false) Integer type,
             @RequestParam(required = false) Integer limit,
             @RequestParam(required = false) String keyWord) {
@@ -52,7 +52,7 @@ public class AnalysisController {
     @GetMapping("/cardNews")
     public ResponseEntity<?> getAnalysisCardNews(
             @AuthenticationPrincipal String userIdStr,
-            @RequestParam(required = false) String folderId,
+            @RequestParam(required = false) UUID folderId,
             @RequestParam(required = false) Integer type,
             @RequestParam(required = false) Integer limit,
             @RequestParam(required = false) Integer page,
