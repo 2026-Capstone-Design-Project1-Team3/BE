@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @EqualsAndHashCode // jpa가 analysis entity 속 SpeedDistribution 비교 가능하도록 해줌
 public class SpeedDistribution {
-    private Float fast;
-    private Float optimal;
-    private Float slow;
+    private Integer fast;
+    private Integer optimal;
+    private Integer slow;
 }

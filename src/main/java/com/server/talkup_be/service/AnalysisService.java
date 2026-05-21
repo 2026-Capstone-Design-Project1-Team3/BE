@@ -60,6 +60,7 @@ public class AnalysisService {
         return analysisRepo.findAnalyses(userId.toString(), folderId, type, processedKeyWord, pageable);
     }
 
+    // 연습기록 상세 보기
     public AnalysisDto.AnalysisInfo getAnalysisData(UUID userId, UUID analysisId) {
 
         Analysis analysis = analysisRepo.findById(analysisId).orElseThrow(() -> new IllegalArgumentException("해당 연습 기록을 찾을 수 없습니다."));
@@ -72,28 +73,27 @@ public class AnalysisService {
                 .analysisId(analysisId)
                 .folderId(analysis.getFolderId())
                 .title(analysis.getTitle())
-                .description(analysis.getDescription())
                 .type(analysis.getType())
                 .summary(analysis.getSummary())
                 .createdAt(analysis.getCreatedAt())
                 .gazeScore(analysis.getGazeScore())
                 .gazeDistribution(analysis.getGazeDistribution())
-                .gazeFeedback(analysis.getGazeFeedback())
                 .fluencyLevel(analysis.getFluencyLevel())
                 .fluencyFeedback(analysis.getFluencyFeedback())
                 .speedScore(analysis.getSpeedScore())
                 .speedDistribution(analysis.getSpeedDistribution())
-                .speedFeedback(analysis.getSpeedFeedback())
-                .nonverbalFeedback(analysis.getNonverbalFeedback())
+                .gestureFeedbackWord(analysis.getGestureFeedbackWord())
+                .gestureFeedbackSentence(analysis.getGestureFeedbackSentence())
                 .finalScore(analysis.getFinalScore())
                 .finalFeedback(analysis.getFinalFeedback())
                 .transcript(analysis.getTranscript())
                 .build();
     }
 
+    // 연습기록 삭제
     @Transactional
     public void deleteAnalysis(UUID userId, List<UUID> analysisIds) {
-        //빈 배열일 경우
+        // 빈 배열일 경우
         if (analysisIds == null || analysisIds.isEmpty()) {
             throw new IllegalArgumentException("삭제할 연습기록이 선택되지 않았습니다.");
         }

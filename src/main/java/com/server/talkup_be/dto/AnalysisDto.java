@@ -3,11 +3,7 @@ package com.server.talkup_be.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.server.talkup_be.entity.GazeDistribution;
 import com.server.talkup_be.entity.SpeedDistribution;
-import jakarta.persistence.Column;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +26,6 @@ public class AnalysisDto {
     public static class AnalysisCardnews {
         private UUID analysisId;
         private String title;
-        private String description;
         private Integer type;
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd", timezone = "Asia/Seoul")
@@ -42,40 +37,18 @@ public class AnalysisDto {
     @AllArgsConstructor
     @ToString
     public static class ResultInput {
-        private String testId;
+        private UUID analysisId;
         private Integer gazeScore;
-
         private GazeDistribution gazeDistribution;
-
         private Integer fluencyLevel;
         private Integer speedScore;
-
         private SpeedDistribution speedDistribution;
-
-        private String speedFeedback;
+        private String gestureFeedbackWord;
+        private String gestureFeedbackSentence;
         private Integer finalScore;
         private String transcript;
         private String fileKey;
         private Integer type;
-
-        @Getter
-        @NoArgsConstructor
-        @AllArgsConstructor
-        @ToString
-        public static class GazeDistribution {
-            private Float screen;
-            private Float camera;
-        }
-
-        @Getter
-        @NoArgsConstructor
-        @AllArgsConstructor
-        @ToString
-        public static class SpeedDistribution {
-            private Float fast;
-            private Float optimal;
-            private Float slow;
-        }
     }
 
     @Builder
@@ -87,7 +60,6 @@ public class AnalysisDto {
         private UUID analysisId;
         private String folderId;
         private String title;
-        private String description;
         private Integer type;
         private String summary;
 
@@ -96,13 +68,12 @@ public class AnalysisDto {
 
         private Integer gazeScore;
         private GazeDistribution gazeDistribution;
-        private String gazeFeedback;
         private Integer fluencyLevel;
         private String fluencyFeedback;
         private Integer speedScore;
         private SpeedDistribution speedDistribution;
-        private String speedFeedback;
-        private String nonverbalFeedback;
+        private String gestureFeedbackWord;
+        private String gestureFeedbackSentence;
         private Integer finalScore;
         private String finalFeedback;
         private String transcript;
