@@ -9,6 +9,6 @@ import lombok.*;
 @AllArgsConstructor
 @EqualsAndHashCode // jpa가 analysis entity 속 GazeDistribution 비교 가능하도록 해줌
 public class GazeDistribution {
-    private Float screen;
-    private Float camera;
+    private Integer screen;
+    private Integer camera;
 }

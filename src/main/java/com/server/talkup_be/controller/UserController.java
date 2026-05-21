@@ -69,15 +69,11 @@ public class UserController {
     ) {
         // 1. DTO 규칙 위반 시
         if (bindingResult.hasErrors()) {
-            // 첫 번째 에러 메시지
             String errorMessage = bindingResult.getAllErrors().get(0).getDefaultMessage();
-            // 400 Bad Request와 함께 프론트엔드에게 실패 이유
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
         }
 
         try {
-            //log는 추후 삭제 요망
-            log.info("회원가입 요청 데이터 확인: " + userInput.toString());
             // 2. user save 호출
             userService.save(userInput);
             return ResponseEntity.ok("회원가입 성공");

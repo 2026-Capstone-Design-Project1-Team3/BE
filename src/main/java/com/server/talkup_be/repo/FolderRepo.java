@@ -22,7 +22,7 @@ public interface FolderRepo extends JpaRepository<Folder, UUID> {
 
     // 폴더 미리보기 조회
     @Query("SELECT new com.server.talkup_be.dto.FolderDto$FolderInfo(" +
-            "f.id, f.title, f.description, f.type, f.createdAt) " +
+            "f.id, f.title, f.type, f.updatedAt) " +
             "FROM Folder f WHERE " +
             "f.userId = :userId AND " +
             "(:type IS NULL OR f.type = :type) AND " +

@@ -1,13 +1,9 @@
 package com.server.talkup_be.entity;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-import org.jspecify.annotations.Nullable;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -28,8 +24,6 @@ public class Folder {
     @Column(nullable = false)
     private String title;
 
-    private String description;
-
     @Column(nullable = false)
     private String fileName;
 
@@ -49,15 +43,15 @@ public class Folder {
     private Integer type;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     //랜덤 초기 id 세팅
     @PrePersist
     public void prePersist() {
         this.id = UUID.randomUUID();
         //날짜 자동 세팅
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
+        if (this.updatedAt == null) {
+            this.updatedAt = LocalDateTime.now();
         }
     }
 }

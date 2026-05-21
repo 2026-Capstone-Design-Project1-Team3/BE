@@ -32,8 +32,6 @@ public class FolderService {
         Folder newFolder =  Folder.builder()
                 .userId(userId.toString())
                 .title(folderInput.getTitle())
-                .description(folderInput.getDescription())
-                .description(folderInput.getDescription())
                 .fileName(folderInput.getFileName())
                 .fileKey(folderInput.getFileKey())
                 .extraInfo(folderInput.getExtraInfo())
@@ -75,8 +73,8 @@ public class FolderService {
 
         // how == 0이면 최신순, how==1이면 날짜순
         Sort sort = (how != null && how == 1)
-                ? Sort.by(Sort.Direction.ASC, "createdAt")
-                : Sort.by(Sort.Direction.DESC, "createdAt");
+                ? Sort.by(Sort.Direction.ASC, "updatedAt")
+                : Sort.by(Sort.Direction.DESC, "updatedAt");
 
         // Pageable 생성
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);

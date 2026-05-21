@@ -25,7 +25,7 @@ public interface AnalysisRepo extends JpaRepository<Analysis, UUID> {
 
     // 연습기록 미리보기 조회
     @Query("SELECT new com.server.talkup_be.dto.AnalysisDto$AnalysisCardnews(" +
-            "a.id, a.title, a.description, a.type, a.createdAt) " +
+            "a.id, a.title, a.type, a.createdAt) " +
             "FROM Analysis a WHERE " +
             "a.userId = :userId AND " +
             "(:folderId IS NULL OR a.folderId = :folderId) AND " +

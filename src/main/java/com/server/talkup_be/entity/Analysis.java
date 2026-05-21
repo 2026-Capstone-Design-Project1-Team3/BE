@@ -1,9 +1,6 @@
 package com.server.talkup_be.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,6 +12,15 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
+@Table(
+        name = "analysis",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_file_key_status",
+                        columnNames = {"file_key", "status"} // 두 컬럼의 조합이 유니크해야 함
+                )
+        }
+)
 @Getter
 @Builder
 @NoArgsConstructor
@@ -29,55 +35,50 @@ public class Analysis {
     @Column(nullable = false)
     private String folderId;
 
+    @Column(name = "file_key", nullable = false)
+    private String fileKey;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AnalysisStatus status; // PENDING, COMPLETED, FAILED
+
     @Column(nullable = false)
     private String title;
-
-    private String description;
 
     @Column(nullable = false)
     private Integer type;
 
     @Column(nullable = false)
-    private String summary;
-
-    @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    // status가 pending일 때는 nullable = true
+
+    private String summary;
+
     private Integer gazeScore;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")
     private GazeDistribution gazeDistribution;
 
-    @Column(nullable = false)
-    private String gazeFeedback;
-
-    @Column(nullable = false)
     private Integer fluencyLevel;
 
-    @Column(nullable = false)
     private String fluencyFeedback;
 
-    @Column(nullable = false)
     private Integer speedScore;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")
     private SpeedDistribution speedDistribution;
 
-    @Column(nullable = false)
-    private String speedFeedback;
+    private String gestureFeedbackWord;
 
-    @Column(nullable = false)
-    private String nonverbalFeedback;
+    private String gestureFeedbackSentence;
 
-    @Column(nullable = false)
     private Integer finalScore;
 
     private String finalFeedback;
 
-    @Column(nullable = false)
     private String transcript;
 
     //랜덤 초기 id 세팅
