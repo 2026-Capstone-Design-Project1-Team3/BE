@@ -7,8 +7,10 @@ import com.server.talkup_be.repo.FolderRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,10 +19,12 @@ import java.util.UUID;
 public class FolderService {
     private final FolderRepo folderRepo;
     private final AnalysisRepo analysisRepo;
+    private final S3Service s3Service;
 
-    public FolderService(FolderRepo folderRepo, AnalysisRepo analysisRepo) {
+    public FolderService(FolderRepo folderRepo, AnalysisRepo analysisRepo, S3Service s3Service) {
         this.folderRepo = folderRepo;
         this.analysisRepo = analysisRepo;
+        this.s3Service = s3Service;
     }
 
     //폴더 생성
@@ -118,5 +122,40 @@ public class FolderService {
     public FolderDto.FolderStatistics getFolderStatistics(UUID userId, UUID folderId) {
         // 해당 폴더가 가진 연습기록의 피드백 평균값
         return analysisRepo.findStatisticsByFolderId(folderId);
+    }
+
+    // folder의 연습기록들 통계 조회
+    @Transactional(readOnly = true)
+    public FolderDto.FolderSettingRes getFolderSetting(UUID userId, UUID folderId) {
+        // folderId로 폴더 존재 여부 검사 (없으면 404 에러)
+        Folder folder = folderRepo.findById(folderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 폴더입니다."));
+        //folder의 userId로 권한 검사
+        if (!folder.getUserId().equals(userId)) {
+            throw new IllegalStateException("접근 권한이 없는 폴더입니다.");
+        }
+
+        String resultContents = "";
+
+        // 폴더의 type에 따른 분기 처리
+        if (folder.getType() == 0) {
+            // 발표(type=0): 10분짜리 다운로드 임시 URL 발급
+            String fileKey = folder.getFileKey();
+            if (fileKey == null || fileKey.isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "등록된 발표 자료(PDF)가 없습니다.");
+            }
+            resultContents = s3Service.getPresignedDownloadUrl(fileKey);
+
+        } else if (folder.getType() == 1) {
+            // 면접 질문 반환
+            resultContents = folder.getOutputText();
+            if (resultContents == null || resultContents.isBlank()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "등록된 면접 질문이 없습니다.");
+            }
+        } else {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 폴더 타입입니다.");
+        }
+
+        return new FolderDto.FolderSettingRes(resultContents);
     }
 }

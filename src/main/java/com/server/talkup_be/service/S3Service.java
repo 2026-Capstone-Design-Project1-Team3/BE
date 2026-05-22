@@ -20,7 +20,7 @@ public class S3Service {
     private final S3Presigner s3Presigner;
     private final String bucketName;
 
-    // 생성자 주입 및 S3 Presigner 초기화 (IAM Role을 자동으로 인식함!)
+    // 생성자 주입 및 S3 Presigner 초기화 (IAM Role을 자동으로 인식함)
     public S3Service(@Value("${cloud.aws.s3.bucket}") String bucketName,
                      @Value("${cloud.aws.region.static}") String region) {
         this.bucketName = bucketName;
@@ -48,5 +48,24 @@ public class S3Service {
         String uploadUrl = s3Presigner.presignPutObject(presignRequest).url().toString();
 
         return new FileDto(uploadUrl, fileKey);
+    }
+
+    // 파일 다운로드 링크 반환
+    public String getPresignedDownloadUrl(String fileKey) {
+
+        // S3에서 특정 키(이름)의 파일을 가져오겠다는 요청 객체 생성
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(fileKey) // DB에 저장되어 있던 그 고유한 파일명
+                .build();
+
+        // 10분 동안만 유효한 다운로드용 Pre-signed URL 생성
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(10))
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        // 발급된 URL을 String으로 변환해서 반환
+        return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 }

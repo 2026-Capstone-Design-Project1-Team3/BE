@@ -15,6 +15,7 @@ public class FileController {
         this.s3Service = s3Service;
     }
 
+    // s3 파일 업로드 링크 반환
     @GetMapping("/presignedUrl/{fileName}")
     public ResponseEntity<FileDto> getPresignedUrl(@PathVariable("fileName") String fileName) {
 
