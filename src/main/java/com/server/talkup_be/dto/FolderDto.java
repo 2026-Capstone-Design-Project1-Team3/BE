@@ -75,7 +75,7 @@ public class FolderDto {
     }
     @Getter
     @NoArgsConstructor
-    public class FolderScript {
+    public static class FolderScript {
         private String fileKey;
         private String extraInfo; // 새로 제작 시 "", 수정 시 기존 대본 텍스트
     }
