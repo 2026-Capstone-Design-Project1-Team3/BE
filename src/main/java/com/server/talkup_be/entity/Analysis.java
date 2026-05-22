@@ -53,6 +53,7 @@ public class Analysis {
 
     // status가 pending일 때는 nullable = true
 
+    @Column(columnDefinition = "LONGTEXT")
     private String summary;
 
     private Integer gazeScore;
@@ -63,6 +64,7 @@ public class Analysis {
 
     private Integer fluencyLevel;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String fluencyFeedback;
 
     private Integer speedScore;
@@ -73,12 +75,15 @@ public class Analysis {
 
     private String gestureFeedbackWord;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String gestureFeedbackSentence;
 
     private Integer finalScore;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String finalFeedback;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String transcript;
 
     //랜덤 초기 id 세팅
