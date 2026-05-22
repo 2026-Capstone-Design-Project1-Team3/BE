@@ -4,6 +4,7 @@ import com.server.talkup_be.service.RedisBlacklistService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -56,6 +57,8 @@ public class SecurityConfig {
                         .requestMatchers("/user/signUp", "/user/login", "/user/check/**",
                                         "/swagger-ui/**", "/v3/api-docs/**"
                         ).permitAll()
+                        // AI소통(시크릿키만 사용)
+                        .requestMatchers(HttpMethod.POST, "/user/eye").permitAll()
                         // 에러 확인 - 전부 개발 후 지우기
                         .requestMatchers("/error").permitAll()
                         // 그 외는 토큰 필요

@@ -10,13 +10,14 @@ import com.server.talkup_be.service.UserService;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.validation.BindingResult;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 import java.util.UUID;
@@ -34,6 +35,9 @@ public class UserController {
         this.redisBlacklistService = redisBlacklistService;
         this.userService = userService;
     }
+
+    @Value("${app.api.internal-secret}")
+    private String internalSecret;
 
     // 로그인
     @PostMapping("/login")
@@ -69,15 +73,11 @@ public class UserController {
     ) {
         // 1. DTO 규칙 위반 시
         if (bindingResult.hasErrors()) {
-            // 첫 번째 에러 메시지
             String errorMessage = bindingResult.getAllErrors().get(0).getDefaultMessage();
-            // 400 Bad Request와 함께 프론트엔드에게 실패 이유
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
         }
 
         try {
-            //log는 추후 삭제 요망
-            log.info("회원가입 요청 데이터 확인: " + userInput.toString());
             // 2. user save 호출
             userService.save(userInput);
             return ResponseEntity.ok("회원가입 성공");
@@ -193,14 +193,16 @@ public class UserController {
     // 시선 보정값 설정
     @PostMapping("/eye")
     public ResponseEntity<?> setEyeCalibration(
-            @AuthenticationPrincipal String userIdStr,
-            @RequestBody UserDto.UserEye userEye) {
+            @RequestHeader("X-Internal-Secret") String secretHeader,
+            @RequestBody UserDto.UserEyeInput userEye) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
-            UUID userId = UUID.fromString(userIdStr);
+            // 1. 키 분석 (ai가 준 시크릿 키)
+            if (!internalSecret.equals(secretHeader)) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "허가되지 않은 접근입니다.");
+            }
 
             // 2. Service 호출
-            userService.saveUserEyeData(userId, userEye);
+            userService.saveUserEyeData(userEye);
 
             return ResponseEntity.ok().body("시선 보정값이 성공적으로 설정되었습니다.");
 

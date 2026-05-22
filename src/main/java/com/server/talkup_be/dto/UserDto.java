@@ -10,6 +10,8 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.UUID;
+
 public class UserDto {
     @Builder
     @Getter
@@ -79,6 +81,17 @@ public class UserDto {
     @AllArgsConstructor
     @ToString
     public static class UserEye {
+        private Float leftEyeOffset;
+        private Float rightEyeOffset;
+        private Float ratio;
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public static class UserEyeInput {
+        private UUID userId;
         private Float leftEyeOffset;
         private Float rightEyeOffset;
         private Float ratio;

@@ -25,11 +25,12 @@ public class FolderDto {
     public static class FolderInfo {
         private UUID folderId;
         private String title;
-        private String description;
         private Integer type;
 
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy.MM.dd", timezone = "Asia/Seoul")
-        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+
+        private Long totalAnalyses;
     }
     @Builder
     @Getter
@@ -38,7 +39,6 @@ public class FolderDto {
     @ToString
     public static class FolderInput {
         private String title;
-        private String description;
         private String fileName;
         private String fileKey;
         private String extraInfo;
@@ -53,5 +53,18 @@ public class FolderDto {
     @ToString
     public static class FolderDeleteList {
         private List<UUID> folderId;
+    }
+    @Getter
+    @NoArgsConstructor
+    public static class FolderStatistics {
+        private Integer gazeScore;
+        private Integer speedScore;
+        private Integer finalScore;
+
+        public FolderStatistics(Double gazeScore, Double speedScore, Double finalScore) {
+            this.gazeScore = (int) Math.round(gazeScore);
+            this.speedScore = (int) Math.round(speedScore);
+            this.finalScore = (int) Math.round(finalScore);
+        }
     }
 }

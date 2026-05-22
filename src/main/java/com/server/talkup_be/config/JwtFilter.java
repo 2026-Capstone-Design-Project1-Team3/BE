@@ -27,6 +27,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+        String method = request.getMethod();
 
         // 이 주소들로 들어오는 요청은 헤더에 만료된 토큰이 있든 없든 무조건 통과!
         return path.startsWith("/user/login") ||
@@ -34,7 +35,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.startsWith("/user/check") ||
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/v3/api-docs") ||
-                path.startsWith("/error");
+                path.startsWith("/error") ||
+                (path.startsWith("/user/eye") && method.equalsIgnoreCase("POST"));
     }
 
     @Override
