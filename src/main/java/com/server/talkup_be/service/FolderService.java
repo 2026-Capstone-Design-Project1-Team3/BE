@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class FolderService {
@@ -92,6 +93,17 @@ public class FolderService {
             if (!folder.getUserId().equals(userId)) {
                 throw new IllegalStateException("삭제 권한이 없는 폴더가 포함되어 있습니다.");
             }
+        }
+
+        // fileKey 리스트 만들기
+        List<String> fileKeys = folders.stream()
+                .map(Folder::getFileKey)
+                .filter(key -> key != null && !key.isBlank())
+                .collect(Collectors.toList());
+
+        // fileKey로 s3파일 한 번에 삭제
+        if (!fileKeys.isEmpty()) {
+            s3Service.deleteFiles(fileKeys);
         }
 
         // 관련 analysis 지우기
