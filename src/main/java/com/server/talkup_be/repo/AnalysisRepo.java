@@ -1,6 +1,7 @@
 package com.server.talkup_be.repo;
 
 import com.server.talkup_be.dto.AnalysisDto;
+import com.server.talkup_be.dto.FolderDto;
 import com.server.talkup_be.entity.Analysis;
 import com.server.talkup_be.entity.Folder;
 import org.springframework.data.domain.Pageable;
@@ -53,4 +54,11 @@ public interface AnalysisRepo extends JpaRepository<Analysis, UUID> {
     @Query("DELETE FROM Analysis a WHERE a.folderId IN :folderIds")
     void deleteByFolderIdIn(List<UUID> folderIds);
 
+    //폴더가 가진 연습기록들의 수치 통계
+    @Query("SELECT new com.server.talkup_be.dto.FolderDto$FolderStatistics(" +
+            "COALESCE(AVG(a.gazeScore), 0.0), " +
+            "COALESCE(AVG(a.speedScore), 0.0), " +
+            "COALESCE(AVG(a.finalScore), 0.0)) " +
+            "FROM Analysis a WHERE a.folderId = :folderId")
+    FolderDto.FolderStatistics findStatisticsByFolderId(UUID folderId);
 }

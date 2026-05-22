@@ -113,4 +113,10 @@ public class FolderService {
             this.deleteFolder(userId, folderIds);
         }
     }
+
+    // folder의 연습기록들 통계 조회
+    public FolderDto.FolderStatistics getFolderStatistics(UUID userId, UUID folderId) {
+        // 해당 폴더가 가진 연습기록의 피드백 평균값
+        return analysisRepo.findStatisticsByFolderId(folderId);
+    }
 }
