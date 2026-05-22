@@ -4,6 +4,7 @@ import com.server.talkup_be.config.JwtProvider;
 import com.server.talkup_be.dto.FolderDto;
 import com.server.talkup_be.dto.UserDto;
 import com.server.talkup_be.service.FolderService;
+import com.server.talkup_be.service.OpenAiService;
 import com.server.talkup_be.service.RedisBlacklistService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,9 +20,27 @@ import java.util.UUID;
 @RequestMapping("/folder")
 public class FolderController {
     private final FolderService folderService;
+    private final OpenAiService openAiService;
 
-    public FolderController(FolderService folderService) {
+    public FolderController(FolderService folderService, OpenAiService openAiService) {
         this.folderService = folderService;
+        this.openAiService = openAiService;
+    }
+
+    // 대본 생성 or 수정
+    @PostMapping("/outputText")
+    public ResponseEntity<FolderDto.FolderScriptRes> generateScript(@RequestBody FolderDto.FolderScript request) {
+        try {
+            // 1. S3 파일 키와 기존 대본 정보(없으면 빈 칸)를 넘겨서 실행
+            String resultText = openAiService.generateOrModifyScript(request.getFileKey(), request.getExtraInfo());
+
+            // 2. 규격에 맞게 포장해서 리턴
+            return ResponseEntity.ok(new FolderDto.FolderScriptRes(resultText));
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // 스레드 인터럽트 복구
+            throw new RuntimeException("대본 생성 중 서버 중단 발생", e);
+        }
     }
 
     // 폴더 생성
@@ -110,6 +129,28 @@ public class FolderController {
             return ResponseEntity.ok().body("폴더 삭제가 성공적으로 설정되었습니다.");
         } catch (IllegalStateException e){
             // 권한 없는 폴더 삭제 요청(403)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // 프론트가 값을 잘못 보냈거나 권한이 없을 때 (400 or 403)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    // 연습 전 해당 폴더에 필요한 세팅값 조회
+    @PostMapping("/setting/{folderId}")
+    public ResponseEntity<?> getFolderSetting(
+            @AuthenticationPrincipal String userIdStr,
+            @PathVariable("folderId") UUID folderId) {
+        try {
+            // 1. 토큰 추출 (프론트가 준 토큰)
+            UUID userId = UUID.fromString(userIdStr);
+
+            // 2. Service 호출
+            FolderDto.FolderSettingRes result = folderService.getFolderSetting(userId, folderId);
+
+            return ResponseEntity.ok().body(result);
+        } catch (IllegalStateException e){
+            // 권한 없는 폴더 세팅 요청(403)
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (IllegalArgumentException e) {
             // 프론트가 값을 잘못 보냈거나 권한이 없을 때 (400 or 403)
