@@ -73,4 +73,15 @@ public class FolderDto {
     public static class FolderSettingRes {
         private String set; // type=0 일 때는 PDF 다운로드 URL, type=1 일 때는 면접 질문 텍스트
     }
+    @Getter
+    @NoArgsConstructor
+    public class FolderScript {
+        private String fileKey;
+        private String extraInfo; // 새로 제작 시 "", 수정 시 기존 대본 텍스트
+    }
+    @Getter
+    @AllArgsConstructor
+    public static class FolderScriptRes {
+        private String extraInfo;
+    }
 }
