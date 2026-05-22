@@ -54,4 +54,17 @@ public class FolderDto {
     public static class FolderDeleteList {
         private List<UUID> folderId;
     }
+    @Getter
+    @NoArgsConstructor
+    public static class FolderStatistics {
+        private Integer gazeScore;
+        private Integer speedScore;
+        private Integer finalScore;
+
+        public FolderStatistics(Double gazeScore, Double speedScore, Double finalScore) {
+            this.gazeScore = (int) Math.round(gazeScore);
+            this.speedScore = (int) Math.round(speedScore);
+            this.finalScore = (int) Math.round(finalScore);
+        }
+    }
 }
