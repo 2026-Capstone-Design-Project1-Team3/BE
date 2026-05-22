@@ -2,8 +2,17 @@ package com.server.talkup_be.service;
 
 import com.server.talkup_be.dto.FileDto;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -13,6 +22,7 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -23,10 +33,16 @@ public class S3Service {
     private final String bucketName;
     private final S3Client s3Client; // 파일 제어(삭제)를 위한 클라이언트
 
+    private final RestTemplate restTemplate = new RestTemplate();
+    private final String apiKey;
+
     // 생성자 주입 및 S3 Presigner 초기화 (IAM Role을 자동으로 인식함)
     public S3Service(@Value("${cloud.aws.s3.bucket}") String bucketName,
-                     @Value("${cloud.aws.region.static}") String region) {
+                     @Value("${cloud.aws.region.static}") String region,
+                     @Value("${openai.api.key}") String apiKey) {
         this.bucketName = bucketName;
+        this.apiKey = apiKey;
+
         this.s3Presigner = S3Presigner.builder()
                 .region(Region.of(region))
                 .credentialsProvider(DefaultCredentialsProvider.create()) // 💡 EC2의 IAM Role을 알아서 찾아 쓰는 마법의 코드
@@ -101,5 +117,42 @@ public class S3Service {
                 .build();
 
         s3Client.deleteObjects(deleteObjectsRequest);
+    }
+
+    // s3의 파일을 읽어 openAI에 업로드 후 file_id 반환
+    private String uploadPdfToOpenAi(String fileKey) {
+        // S3에서 PDF 파일 가져오기
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(fileKey)
+                .build();
+
+        ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(getObjectRequest);
+        byte[] pdfBytes = objectBytes.asByteArray();
+
+        // OpenAI Files API 호출 준비
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setBearerAuth(apiKey);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("purpose", "assistants");
+        body.add("file", new ByteArrayResource(pdfBytes) {
+            @Override
+            public String getFilename() {
+                return "presentation_material.pdf"; // 확장자가 pdf여야 인식함
+            }
+        });
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                "https://api.openai.com/v1/files", requestEntity, Map.class);
+
+        if (response.getBody() != null && response.getBody().containsKey("id")) {
+            return (String) response.getBody().get("id");
+        }
+
+        throw new RuntimeException("OpenAI 파일 업로드 실패");
     }
 }
