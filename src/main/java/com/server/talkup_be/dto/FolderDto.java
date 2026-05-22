@@ -67,4 +67,10 @@ public class FolderDto {
             this.finalScore = (int) Math.round(finalScore);
         }
     }
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class FolderSettingRes {
+        private String set; // type=0 일 때는 PDF 다운로드 URL, type=1 일 때는 면접 질문 텍스트
+    }
 }

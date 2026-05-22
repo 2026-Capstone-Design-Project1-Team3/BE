@@ -116,4 +116,26 @@ public class FolderController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
+
+    // 연습 전 해당 폴더에 필요한 세팅값 조회
+    @PostMapping("/setting/{folderId}")
+    public ResponseEntity<?> getFolderSetting(
+            @AuthenticationPrincipal String userIdStr,
+            @PathVariable("folderId") UUID folderId) {
+        try {
+            // 1. 토큰 추출 (프론트가 준 토큰)
+            UUID userId = UUID.fromString(userIdStr);
+
+            // 2. Service 호출
+            FolderDto.FolderSettingRes result = folderService.getFolderSetting(userId, folderId);
+
+            return ResponseEntity.ok().body(result);
+        } catch (IllegalStateException e){
+            // 권한 없는 폴더 세팅 요청(403)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // 프론트가 값을 잘못 보냈거나 권한이 없을 때 (400 or 403)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
 }
