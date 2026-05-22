@@ -21,18 +21,45 @@ public class FolderService {
     private final FolderRepo folderRepo;
     private final AnalysisRepo analysisRepo;
     private final S3Service s3Service;
+    private final OpenAiService openAiService;
 
-    public FolderService(FolderRepo folderRepo, AnalysisRepo analysisRepo, S3Service s3Service) {
+    public FolderService(FolderRepo folderRepo, AnalysisRepo analysisRepo, S3Service s3Service, OpenAiService openAiService) {
         this.folderRepo = folderRepo;
         this.analysisRepo = analysisRepo;
         this.s3Service = s3Service;
+        this.openAiService = openAiService;
     }
 
     //폴더 생성
     public void saveFolderData(UUID userId, FolderDto.FolderInput folderInput) {
         String newOutputText = "";
-//        if(folderInput.getType() == 1)
-//            newOutputText = createQuestions();  //면접 질문 생성 로직 만들고 주석 풀기
+        // type=1이면? (면접이면)
+        if (folderInput.getType() == 1) {
+            try {
+                // 1. 최근 분석 요약본 3개 (없으면 빈 리스트 반환)
+                List<String> recentSummaries = List.of();
+
+
+                // 질문 추가 생성 로직
+//              List<Analysis> analyses = analysisRepo.findTop3ByFolderIdOrderByCreatedAtDesc(folderId);
+//              recentSummaries = analyses.stream().map(Analysis::getSummary).toList();
+
+
+                // 2. OpenAI 호출
+                newOutputText = openAiService.generateInterviewQuestionsWithFile(
+                        folderInput.getFileKey(),
+                        folderInput.getCompanyName(),
+                        folderInput.getInputText(),
+                        recentSummaries
+                );
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("면접 질문 생성 중 서버 지연이 발생했습니다.", e);
+            } catch (Exception e) {
+                // S3 통신 실패 등 기타 에러 처리
+                throw new RuntimeException("면접 질문 생성 실패: " + e.getMessage(), e);
+            }
+        }
         
         Folder newFolder =  Folder.builder()
                 .userId(userId)

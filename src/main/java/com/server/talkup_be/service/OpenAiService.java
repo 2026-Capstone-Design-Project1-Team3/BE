@@ -141,4 +141,74 @@ public class OpenAiService {
         Map<String, Object> textObj = (Map<String, Object>) contentList.get(0).get("text");
         return (String) textObj.get("value");
     }
+
+    // 면접 예상 질문 5개 생성 메서드
+    public String generateInterviewQuestionsWithFile(String fileKey, String companyName, String inputText, List<String> recentSummaries) throws InterruptedException {
+        // 1. S3에서 파일 바이트로 가져오기
+        byte[] pdfBytes = s3Client.getObjectAsBytes(GetObjectRequest.builder()
+                .bucket(bucketName).key(fileKey).build()).asByteArray();
+
+        // 2. OpenAI에 파일 업로드하고 fileId 받기
+        String fileId = uploadFileToOpenAi(pdfBytes);
+
+        // 3. 동적 프롬프트 조립
+        StringBuilder userPromptBuilder = new StringBuilder();
+        userPromptBuilder.append(String.format("첨부된 포트폴리오/이력서 문서와 아래 정보를 완벽하게 분석해서 면접 질문을 생성해.\n지원 회사: %s\n자기소개서: %s\n\n",
+                companyName != null ? companyName : "알 수 없음",
+                inputText != null ? inputText : "일반적인 직무 역량 기반"));
+
+        if (recentSummaries == null || recentSummaries.isEmpty()) {
+            userPromptBuilder.append("첨부된 파일을 바탕으로, 실전 면접 예상 질문 딱 5개만 생성해 줘.");
+        } else {
+            userPromptBuilder.append("다음은 지원자의 최근 면접 연습 답변 요약 기록이야:\n");
+            for (int i = 0; i < recentSummaries.size(); i++) {
+                userPromptBuilder.append(String.format("- 이전 연습 답변 %d: %s\n", i + 1, recentSummaries.get(i)));
+            }
+            userPromptBuilder.append("\n첨부된 파일의 세부 내용과 위의 이전 답변 요약들을 종합적으로 분석해서, 지원자의 주장을 더 깊게 파고들거나 문서에 적힌 경험을 구체적으로 검증하는 날카로운 심층 압박 질문(꼬리 질문) 딱 5개를 생성해 줘.");
+        }
+
+        // 파싱을 위한 절대 규칙
+        userPromptBuilder.append("\n\n조건: 반드시 각 질문 사이에만 '<q>' 구분자를 넣어서 한 줄로 출력해. 숫자(1., 2.), 줄바꿈, 【4:6†material.pdf】 같은 출처 주석 기호나 인사말은 절대 넣지 마.");
+
+        // 4. 면접 질문 전용 Thread 생성 및 Run
+        Map<String, String> ids = createInterviewThreadAndRun(fileId, userPromptBuilder.toString());
+        String threadId = ids.get("thread_id");
+        String runId = ids.get("run_id");
+
+        // 5. 완료될 때까지 대기
+        waitForCompletion(threadId, runId);
+
+        // 6. 결과 반환
+        return getLatestMessage(threadId);
+    }
+
+    // 면접 질문 매서드
+    private Map<String, String> createInterviewThreadAndRun(String fileId, String prompt) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+        headers.set("OpenAI-Beta", "assistants=v2");
+
+        Map<String, Object> body = Map.of(
+                "assistant_id", assistantId, // (기존에 만든 gpt-4o 기반 assistant 재활용)
+                "thread", Map.of(
+                        "messages", List.of(Map.of(
+                                "role", "user",
+                                "content", prompt,
+                                "attachments", List.of(Map.of(
+                                        "file_id", fileId,
+                                        "tools", List.of(Map.of("type", "file_search"))
+                                ))
+                        ))
+                )
+        );
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                "https://api.openai.com/v1/threads/runs", new HttpEntity<>(body, headers), Map.class);
+
+        return Map.of(
+                "thread_id", (String) response.getBody().get("thread_id"),
+                "run_id", (String) response.getBody().get("id")
+        );
+    }
 }
