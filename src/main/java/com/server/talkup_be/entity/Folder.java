@@ -30,13 +30,15 @@ public class Folder {
     @Column(nullable = false)
     private String fileKey;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "LONGTEXT", nullable = false)
     private String extraInfo;
 
     private String companyName;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String outputText;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String inputText;
 
     @Column(nullable = false)
