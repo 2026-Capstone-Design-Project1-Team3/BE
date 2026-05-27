@@ -4,6 +4,7 @@ import com.server.talkup_be.dto.AnalysisDto;
 import com.server.talkup_be.entity.Analysis;
 import com.server.talkup_be.entity.Folder;
 import com.server.talkup_be.repo.AnalysisRepo;
+import com.server.talkup_be.repo.FolderRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -13,12 +14,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
+import static com.server.talkup_be.entity.AnalysisStatus.PENDING;
+
 @Service
 public class AnalysisService {
     private final AnalysisRepo analysisRepo;
+    private final FolderRepo folderRepo;
 
-    public AnalysisService(AnalysisRepo analysisRepo) {
+    public AnalysisService(AnalysisRepo analysisRepo, FolderRepo folderRepo) {
         this.analysisRepo = analysisRepo;
+        this.folderRepo = folderRepo;
     }
 
     // 연습기록 간이(미리보기) 조회
@@ -115,4 +120,26 @@ public class AnalysisService {
         analysisRepo.deleteAll(analyses);
     }
 
+    // 대기 상태 Analysis 생성
+    @Transactional
+    public UUID createPendingAnalysis(UUID userId, UUID folderId, String title, String fileKey, int type) {
+        // 존재 유무 & 본인 analysis 유무
+        Folder folder = folderRepo.findById(folderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 폴더를 찾을 수 없습니다."));
+        if (userId != folder.getUserId()) {
+            throw new IllegalArgumentException("권한이 없는 폴더입니다.");
+        }
+        // 2. pending상태의 Analysis 엔티티 생성
+        Analysis pendingAnalysis = Analysis.builder()
+                .userId(userId)
+                .folderId(folderId)
+                .fileKey(fileKey)
+                .status(PENDING)
+                .title(title)
+                .type(type)
+                .build();
+
+        // 3. DB에 저장 후 analysisId 반환
+        return analysisRepo.save(pendingAnalysis).getId();
+    }
 }
