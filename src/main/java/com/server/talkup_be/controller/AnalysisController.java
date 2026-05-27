@@ -1,8 +1,6 @@
 package com.server.talkup_be.controller;
 
 import com.server.talkup_be.dto.AnalysisDto;
-import com.server.talkup_be.dto.AnalysisDto;
-import com.server.talkup_be.service.AnalysisService;
 import com.server.talkup_be.service.AnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -10,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -34,7 +31,7 @@ public class AnalysisController {
             @RequestParam(defaultValue = "0") Integer how,
             @RequestParam(required = false) String keyWord) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -56,7 +53,7 @@ public class AnalysisController {
             @AuthenticationPrincipal String userIdStr,
             @PathVariable UUID analysisId) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -81,7 +78,7 @@ public class AnalysisController {
             @AuthenticationPrincipal String userIdStr,
             @PathVariable Integer limit) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -103,7 +100,7 @@ public class AnalysisController {
             @AuthenticationPrincipal String userIdStr,
             @RequestBody AnalysisDto.AnalysisDeleteList analysisIds) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출

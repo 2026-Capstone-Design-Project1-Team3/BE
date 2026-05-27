@@ -193,7 +193,13 @@ public class OpenAiService {
         List<Map<String, Object>> data = (List<Map<String, Object>>) response.getBody().get("data");
         List<Map<String, Object>> contentList = (List<Map<String, Object>>) data.get(0).get("content");
         Map<String, Object> textObj = (Map<String, Object>) contentList.get(0).get("text");
-        return (String) textObj.get("value");
+        String rawText = (String) textObj.get("value");
+
+        //【】및 마크다운 기호 지우기
+        return rawText.replaceAll("【.*?】", "")
+                .replaceAll("###", "")
+                .replaceAll("\\*\\*", "")
+                .trim();
     }
 
 
@@ -205,7 +211,7 @@ public class OpenAiService {
         headers.set("OpenAI-Beta", "assistants=v2");
 
         Map<String, Object> body = Map.of(
-                "assistant_id", assistantId, // (기존에 만든 gpt-4o 기반 assistant 재활용)
+                "assistant_id", assistantId,
                 "thread", Map.of(
                         "messages", List.of(Map.of(
                                 "role", "user",
@@ -225,5 +231,41 @@ public class OpenAiService {
                 "thread_id", (String) response.getBody().get("thread_id"),
                 "run_id", (String) response.getBody().get("id")
         );
+    }
+
+    // summary(요약) 생성 메서드
+    public String summarizeTranscript(String transcript) {
+        if (transcript == null || transcript.isBlank()) {
+            return "발화 내용이 없습니다.";
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        String systemPrompt = "너는 면접 답변 요약 전문가야. 사용자의 전체 발화 내용을 핵심만 파악하여 3문장 이내로 짧고 명확하게 요약해 줘.";
+
+        Map<String, Object> requestBody = Map.of(
+                "model", "gpt-4o-mini",
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", transcript)
+                )
+        );
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                "https://api.openai.com/v1/chat/completions",
+                new HttpEntity<>(requestBody, headers),
+                Map.class
+        );
+
+        Map<String, Object> responseBody = response.getBody();
+        if (responseBody != null && responseBody.containsKey("choices")) {
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+            return (String) message.get("content");
+        }
+
+        return "요약에 실패했습니다.";
     }
 }
