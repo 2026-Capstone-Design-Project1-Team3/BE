@@ -1,6 +1,7 @@
 package com.server.talkup_be.service;
 
 import com.server.talkup_be.dto.FileDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class S3Service {
 
@@ -154,5 +156,19 @@ public class S3Service {
         }
 
         throw new RuntimeException("OpenAI 파일 업로드 실패");
+    }
+
+    // s3 파일 삭제
+    public void deleteFile(String fileKey) {
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(fileKey)
+                    .build());
+            // 로그로 남겨두면 나중에 파일이 잘 지워졌는지 추적하기 좋습니다.
+            log.info("S3 파일 삭제 완료: {}", fileKey);
+        } catch (Exception e) {
+            log.error("S3 파일 삭제 실패 (수동 확인 필요): {}", fileKey, e);
+        }
     }
 }

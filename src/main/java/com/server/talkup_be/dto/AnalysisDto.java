@@ -52,6 +52,7 @@ public class AnalysisDto {
         private Integer gazeScore;
         private GazeDistribution gazeDistribution;
         private Integer fluencyLevel;
+        private String fluencyFeedback;
         private Integer speedScore;
         private SpeedDistribution speedDistribution;
         private String gestureFeedbackWord;
