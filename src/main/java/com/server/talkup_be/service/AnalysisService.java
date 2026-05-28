@@ -6,6 +6,7 @@ import com.server.talkup_be.entity.Folder;
 import com.server.talkup_be.repo.AnalysisRepo;
 import com.server.talkup_be.repo.EmitterRepo;
 import com.server.talkup_be.repo.FolderRepo;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,7 @@ import static com.server.talkup_be.entity.AnalysisStatus.FAILED;
 import static com.server.talkup_be.entity.AnalysisStatus.PENDING;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class AnalysisService {
     private final AnalysisRepo analysisRepo;
@@ -31,14 +33,6 @@ public class AnalysisService {
     private final S3Service s3Service;
     private final EmitterRepo emitterRepo;
     private final OpenAiService openAiService;
-
-    public AnalysisService(AnalysisRepo analysisRepo, FolderRepo folderRepo, S3Service s3Service, EmitterRepo emitterRepo, OpenAiService openAiService) {
-        this.analysisRepo = analysisRepo;
-        this.folderRepo = folderRepo;
-        this.s3Service = s3Service;
-        this.emitterRepo = emitterRepo;
-        this.openAiService = openAiService;
-    }
 
     // 연습기록 간이(미리보기) 조회
     public AnalysisDto.AnalysisCardnewsInfo getAnalysisCardnewsData(UUID userId, UUID folderId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
@@ -175,7 +169,23 @@ public class AnalysisService {
 
             pendingAnalysis.setStatus(FAILED);
 
-            // 2. SseEmitter 연결 해제 및 삭제 (추후 삭제로 로직 바껴도 이건 유지)
+            // 2. 프론트엔드에 실패 알림을 보내고 연결 끊기(추후 삭제로 로직 바껴도 이건 유지)
+            SseEmitter emitter = emitterRepo.get(fileKey);
+            if (emitter != null) {
+                try {
+                    // ANALYSIS_FAILED 이벤트 전송
+                    emitter.send(SseEmitter.event()
+                            .name("ANALYSIS_FAILED")
+                            .data("AI 서버 요청에 실패했습니다. (서버 오류)"));
+
+                    // close
+                    emitter.complete();
+                } catch (IOException e) {
+                    log.error("롤백 중 프론트엔드 에러 알림 전송 실패: ", e);
+                }
+            }
+
+            // 3. SseEmitter 연결 해제 및 삭제
             emitterRepo.delete(fileKey);
 
             log.info("롤백 완료");
@@ -211,7 +221,7 @@ public class AnalysisService {
 
             if (resultInput.getType() == 1) {
                 // 면접 : 포트폴리오 기반
-                String question = folder.getInputText();
+                String question = folder.getOutputText();
                 String pdfFileKey = folder.getFileKey(); // 폴더에 저장된 PDF fileKey
 
                 try {

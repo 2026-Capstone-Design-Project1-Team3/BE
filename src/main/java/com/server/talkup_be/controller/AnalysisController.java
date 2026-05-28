@@ -3,6 +3,7 @@ package com.server.talkup_be.controller;
 import com.server.talkup_be.dto.AnalysisDto;
 import com.server.talkup_be.repo.EmitterRepo;
 import com.server.talkup_be.service.AnalysisService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -13,24 +14,22 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/analysis")
 public class AnalysisController {
     private final AnalysisService analysisService;
     private final EmitterRepo emitterRepo;
 
-    public AnalysisController(AnalysisService analysisService, EmitterRepo emitterRepo) {
-        this.analysisService = analysisService;
-        this.emitterRepo = emitterRepo;
-    }
-
     @Value("${app.api.internal-secret}")
     private String internalSecret;
+
+    @Value("${ai.server.url}")
+    private String aiServerUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -180,7 +179,7 @@ public class AnalysisController {
 
         try {
             restTemplate.postForEntity(
-                    internalSecret + "/analysis/start",
+                    aiServerUrl + "/analysis/start",
                     new HttpEntity<>(body, headers),
                     String.class
             );
