@@ -1,7 +1,7 @@
 package com.server.talkup_be.controller;
 
 import com.server.talkup_be.dto.AnalysisDto;
-import com.server.talkup_be.repo.EmitterRepository;
+import com.server.talkup_be.repo.EmitterRepo;
 import com.server.talkup_be.service.AnalysisService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -21,18 +22,15 @@ import java.util.UUID;
 @RequestMapping("/analysis")
 public class AnalysisController {
     private final AnalysisService analysisService;
-    private final EmitterRepository emitterRepository;
+    private final EmitterRepo emitterRepo;
 
-    public AnalysisController(AnalysisService analysisService, EmitterRepository emitterRepository) {
+    public AnalysisController(AnalysisService analysisService, EmitterRepo emitterRepo) {
         this.analysisService = analysisService;
-        this.emitterRepository = emitterRepository;
+        this.emitterRepo = emitterRepo;
     }
 
-    @Value("${ai.internal.secret}")
+    @Value("${app.api.internal-secret}")
     private String internalSecret;
-
-    @Value("${ai.server.url}") // AI 서버 주소 (application.yml에 추가 필요)
-    private String aiServerUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -133,11 +131,10 @@ public class AnalysisController {
     }
 
     // 프론트 SSE 연결 및 AI 서버 분석 요청
-    @GetMapping(value = "/analysis/alarm", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/alarm", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter connectAlarm(
             @AuthenticationPrincipal String userIdStr,
             @RequestParam String fileKey,
-            @RequestParam String fileName, // TODO: 프론트 답변 보고 삭제하거나 남기기
             @RequestParam UUID folderId,
             @RequestParam int type,
             @RequestParam String title) {
@@ -151,13 +148,14 @@ public class AnalysisController {
         // 3. SseEmitter 생성 (타임아웃 60분) 및 저장
         Long timeout = 60L * 1000 * 60;
         SseEmitter emitter = new SseEmitter(timeout);
-        emitterRepository.save(fileKey, emitter);
+        // TODO: repo를 service단으로 내리기
+        emitterRepo.save(fileKey, emitter);
 
         // 4. 503 에러 방지용 더미 데이터 발송
         try {
             emitter.send(SseEmitter.event().name("connect").data("SSE Connected successfully"));
         } catch (IOException e) {
-            emitterRepository.delete(fileKey);
+            emitterRepo.delete(fileKey);
             log.error("SSE 연결 오류: ", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "알림 연결 실패");
         }
@@ -182,14 +180,41 @@ public class AnalysisController {
 
         try {
             restTemplate.postForEntity(
-                    aiServerUrl + "/analysis/start",
+                    internalSecret + "/analysis/start",
                     new HttpEntity<>(body, headers),
                     String.class
             );
             log.info("AI 서버 분석 요청 성공 - analysisId: {}, fileKey: {}", analysisId, fileKey);
         } catch (Exception e) {
             log.error("AI 서버 분석 요청 실패", e);
-            // TODO: 실패 시 대기 상태의 Analysis 삭제 및 S3 파일 삭제 등의 보상 트랜잭션 필요
+            // 1. 대기 상태 Analysis 및 fileKey 영상 지우기
+            analysisService.rollbackPendingAnalysis(analysisId, fileKey);
         }
+    }
+
+    // ai 분석 완료 후 analysis 생성
+    @PostMapping("")
+    public ResponseEntity<String> receiveAiResult(
+            @RequestHeader("X-Internal-Secret") String secretHeader,
+            @RequestBody AnalysisDto.ResultInput resultInput) {
+        try{
+        // 1. 비밀키 검증
+        if (!internalSecret.equals(secretHeader)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "허가되지 않은 접근입니다.");
+        }
+
+        log.info("AI 서버 분석 완료 수신 - analysisId: {}", resultInput.getAnalysisId());
+
+        // 2. Service 호출
+        analysisService.processAndSaveResultAsync(resultInput);
+
+        return ResponseEntity.ok("Success");
+    } catch (IllegalArgumentException | IllegalStateException e) {
+        // AI가 값을 잘못 보냈거나 권한이 없을 때 (400 or 403)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    } catch (Exception e) {
+        // 서버나 DB가 터졌을 때 (500)
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
+    }
     }
 }

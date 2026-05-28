@@ -1,9 +1,6 @@
 package com.server.talkup_be.entity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -44,6 +41,7 @@ public class Folder {
     @Column(nullable = false)
     private Integer type;
 
+    @Setter
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
@@ -56,5 +54,6 @@ public class Folder {
             this.updatedAt = LocalDateTime.now();
         }
     }
+
 }
 

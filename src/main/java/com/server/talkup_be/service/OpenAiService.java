@@ -1,5 +1,7 @@
 package com.server.talkup_be.service;
 
+import com.server.talkup_be.dto.AnalysisDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
@@ -14,6 +16,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class OpenAiService {
 
@@ -267,5 +270,140 @@ public class OpenAiService {
         }
 
         return "요약에 실패했습니다.";
+    }
+
+    // 텍스트 기반 finalFeedback 생성(주로 발표)
+    public String generateFinalFeedback(AnalysisDto.ResultInput result, String backgroundInfo) {
+        if (result.getTranscript() == null || result.getTranscript().isBlank()) {
+            return "분석할 내용이 없습니다.<q>없음<q>없음<q>없음<q>없음";
+        }
+
+        // 1. 시스템 프롬프트 (조건 명확화)
+        String systemPrompt = "너는 날카롭고 전문적인 면접/발표 평가관이야. 사용자의 발화 내용, AI 음성/비전 분석 데이터, 그리고 배경 상황(대본 또는 질문)을 종합적으로 분석해서 다음 5가지 항목을 추출해 줘.\n" +
+                "조건 1: 반드시 각 항목 사이를 '<q>' 로만 구분해서 한 줄로 출력해.\n" +
+                "조건 2: 첫 번째 항목은 1줄짜리 전체 총평이며, 무조건 '~다.' 로 끝나야 해.\n" +
+                "조건 3: 나머지 4개 항목(강점 2개, 개선사항 2개)은 구체적인 '명사구' 형태로 작성해.\n" +
+                "예시: 전체적인 전달력은 우수하지만, 결론부의 강조를 위한 완급 조절이 보완되면 완벽한 발표가 될 것입니다.<q>안정적인 시선 처리 및 청중 교감<q>자연스러운 제스처와 신체 언어<q>핵심 키워드 발음 시 강세 조절<q>대본의 결론부 구체성 추가";
+
+        // 2. 배경 정보 이름 설정
+        String contextType = (result.getType() == 0) ? "원본 발표 대본 (비교용)" : "면접 질문";
+        String safeBackgroundInfo = (backgroundInfo != null && !backgroundInfo.isBlank()) ? backgroundInfo : "제공되지 않음";
+
+        // 3. AI 분석 데이터를 프롬프트에 주입 (동적 텍스트 생성)
+        String userContent = String.format(
+                "[%s]\n%s\n\n" +
+                        "[사용자 실제 발화(Transcript)]\n%s\n\n" +
+                        "[AI 비전/음성 분석 데이터 종합]\n" +
+                        "- 시선 처리: %d점 (화면 응시 %d%%, 카메라 응시 %d%%)\n" +
+                        "- 발화 속도: %d점 (빠름 %d%%, 적절 %d%%, 느림 %d%%)\n" +
+                        "- 유창성 분석: %s\n" +
+                        "- 제스처 분석: %s (%s)",
+                contextType, safeBackgroundInfo, result.getTranscript(),
+                result.getGazeScore(),
+                result.getGazeDistribution() != null ? result.getGazeDistribution().getScreen() : 0,
+                result.getGazeDistribution() != null ? result.getGazeDistribution().getCamera() : 0,
+                result.getSpeedScore(),
+                result.getSpeedDistribution() != null ? result.getSpeedDistribution().getFast() : 0,
+                result.getSpeedDistribution() != null ? result.getSpeedDistribution().getOptimal() : 0,
+                result.getSpeedDistribution() != null ? result.getSpeedDistribution().getSlow() : 0,
+                result.getFluencyFeedback() != null ? result.getFluencyFeedback() : "특이사항 없음",
+                result.getGestureFeedbackWord() != null ? result.getGestureFeedbackWord() : "없음",
+                result.getGestureFeedbackSentence() != null ? result.getGestureFeedbackSentence() : "특이사항 없음"
+        );
+
+        return callChatApi(systemPrompt, userContent);
+    }
+
+    // 포트폴리오 기반 면접 최종 분석 (점수 + 피드백 통합)
+    public String generateAdvancedInterviewFeedback(String pdfFileKey, String question, AnalysisDto.ResultInput result) throws Exception {
+
+        // 1. S3에서 포트폴리오 PDF 다운로드
+        byte[] pdfBytes = s3Client.getObjectAsBytes(GetObjectRequest.builder()
+                .bucket(bucketName).key(pdfFileKey).build()).asByteArray();
+
+        // 2. OpenAI에 PDF 업로드
+        String fileId = uploadFileToOpenAi(pdfBytes);
+
+        // 3. 점수와 피드백 추출
+        String userPrompt = String.format(
+                "첨부된 지원자의 포트폴리오(이력서)와 아래의 면접 데이터를 완벽하게 대조 분석해서, 면접 평가 점수와 피드백을 생성해.\n\n" +
+                        "[면접 질문]\n%s\n\n" +
+                        "[지원자 실제 답변(Transcript)]\n%s\n\n" +
+                        "[AI 비전/음성 분석 데이터]\n" +
+                        "- 시선 처리: %d점\n" +
+                        "- 발화 속도: %d점\n" +
+                        "- 유창성: %s\n" +
+                        "- 제스처: %s\n\n" +
+                        "조건 1: 반드시 6개의 항목을 '<q>'로만 구분해서 한 줄로 출력해.\n" +
+                        "조건 2: 첫 번째 항목은 포트폴리오 기반 직무 적합성과 논리성을 평가한 '면접 점수(0~100 정수)'야.\n" +
+                        "조건 3: 두 번째 항목은 1줄짜리 전체 총평이며, 반드시 '~다.'로 끝나야 해. 가급적 이력서 경험과 비교해서 피드백해.\n" +
+                        "조건 4: 나머지 4개 항목(강점 2개, 개선사항 2개)은 구체적인 '명사구' 형태로 작성해.\n" +
+                        "예시: 85<q>포트폴리오의 웹 개발 경험을 잘 어필했으나, 기술적 깊이에 대한 설명이 다소 부족하다.<q>직무 경험 어필<q>자연스러운 시선 처리<q>경험의 구체성 보완<q>발화 속도 조절",
+                (question != null && !question.isBlank()) ? question : "일반 면접 질문",
+                result.getTranscript(),
+                result.getGazeScore(),
+                result.getSpeedScore(),
+                result.getFluencyFeedback() != null ? result.getFluencyFeedback() : "특이사항 없음",
+                result.getGestureFeedbackSentence() != null ? result.getGestureFeedbackSentence() : "특이사항 없음"
+        );
+
+        // 4. Thread 생성 및 실행 (기존 메서드 재활용)
+        Map<String, String> ids = createInterviewThreadAndRun(fileId, userPrompt);
+        String threadId = ids.get("thread_id");
+        String runId = ids.get("run_id");
+
+        // 5. 분석 완료 대기 후 텍스트 반환
+        waitForCompletion(threadId, runId);
+        return getLatestMessage(threadId);
+    }
+
+    // 면접 예비 finalScore 생성
+    // 면접 final 생성 중 s3 연동이 잘안되면 이거 사용
+    public int generateInterviewScore(String transcript, String question) {
+        if (transcript == null || transcript.isBlank()) return 0;
+
+        String systemPrompt = "너는 10년차 실무 면접관이야. 주어진 [면접 질문]과 지원자의 [실제 답변 발화]를 읽고, 동문서답을 하지는 않았는지, 논리성이 뛰어난지를 평가해서 0부터 100 사이의 '정수(숫자)'로만 점수를 매겨. 기호는 절대 출력하지 마.";
+
+        String userContent = String.format(
+                "[면접 질문]\n%s\n\n[실제 답변 발화]\n%s",
+                (question != null && !question.isBlank()) ? question : "일반적인 인성/직무 면접 질문",
+                transcript
+        );
+
+        try {
+            String rawScoreStr = callChatApi(systemPrompt, userContent).trim();
+            // 숫자만 남김
+            String onlyNumberStr = rawScoreStr.replaceAll("[^0-9]", "");
+
+            return Integer.parseInt(onlyNumberStr);
+        } catch (NumberFormatException e) {
+            return 0; // 파싱 실패 시 기본 점수
+        }
+    }
+
+    // --- 중복 코드 제거용 Chat API 호출 메서드 ---
+    private String callChatApi(String systemPrompt, String userContent) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+
+        Map<String, Object> requestBody = Map.of(
+                "model", "gpt-4o", // 빠르고 가성비 좋은 모델!
+                "messages", List.of(
+                        Map.of("role", "system", "content", systemPrompt),
+                        Map.of("role", "user", "content", userContent)
+                )
+        );
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                "https://api.openai.com/v1/chat/completions", new HttpEntity<>(requestBody, headers), Map.class);
+
+        Map<String, Object> responseBody = response.getBody();
+        if (responseBody != null && responseBody.containsKey("choices")) {
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+            return (String) message.get("content");
+        }
+        return "";
     }
 }

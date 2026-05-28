@@ -1,10 +1,7 @@
 package com.server.talkup_be.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -38,6 +35,7 @@ public class Analysis {
     @Column(name = "file_key", nullable = false)
     private String fileKey;
 
+    @Setter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AnalysisStatus status; // PENDING, COMPLETED, FAILED
@@ -94,5 +92,22 @@ public class Analysis {
         if (this.createdAt == null) {
             this.createdAt = LocalDateTime.now();
         }
+    }
+
+    public void updateAnalysisResult(Integer gazeScore, GazeDistribution gazeDistribution, Integer fluencyLevel, String fluencyFeedback, Integer speedScore, SpeedDistribution speedDistribution, String gestureFeedbackWord, String gestureFeedbackSentence, int finalScore, String transcript, String summary, String finalFeedback) {
+        this.gazeScore = gazeScore;
+        this.gazeDistribution = gazeDistribution;
+        this.fluencyLevel = fluencyLevel;
+        this.fluencyFeedback = fluencyFeedback;
+        this.speedScore = speedScore;
+        this.speedDistribution = speedDistribution;
+        this.gestureFeedbackWord = gestureFeedbackWord;
+        this.gestureFeedbackSentence = gestureFeedbackSentence;
+        this.finalScore = finalScore;
+        this.transcript = transcript;
+        this.summary = summary;
+        this.finalFeedback = finalFeedback;
+
+        this.status = AnalysisStatus.COMPLETED;
     }
 }
