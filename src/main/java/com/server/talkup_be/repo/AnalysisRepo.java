@@ -3,6 +3,7 @@ package com.server.talkup_be.repo;
 import com.server.talkup_be.dto.AnalysisDto;
 import com.server.talkup_be.dto.FolderDto;
 import com.server.talkup_be.entity.Analysis;
+import com.server.talkup_be.entity.AnalysisStatus;
 import com.server.talkup_be.entity.Folder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -61,4 +63,6 @@ public interface AnalysisRepo extends JpaRepository<Analysis, UUID> {
             "COALESCE(AVG(a.finalScore), 0.0)) " +
             "FROM Analysis a WHERE a.folderId = :folderId")
     FolderDto.FolderStatistics findStatisticsByFolderId(UUID folderId);
+
+    Optional<Analysis> findByIdAndStatusNot(UUID analysisId, AnalysisStatus analysisStatus);
 }

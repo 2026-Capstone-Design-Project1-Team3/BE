@@ -59,6 +59,7 @@ public class SecurityConfig {
                         ).permitAll()
                         // AI소통(시크릿키만 사용)
                         .requestMatchers(HttpMethod.POST, "/user/eye").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/analysis").permitAll()
                         // 에러 확인 - 전부 개발 후 지우기
                         .requestMatchers("/error").permitAll()
                         // 그 외는 토큰 필요
