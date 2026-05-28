@@ -21,8 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static com.server.talkup_be.entity.AnalysisStatus.FAILED;
-import static com.server.talkup_be.entity.AnalysisStatus.PENDING;
+import static com.server.talkup_be.entity.AnalysisStatus.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -131,7 +130,7 @@ public class AnalysisService {
     // 대기 상태 Analysis 생성
     @Transactional
     public UUID createPendingAnalysis(UUID userId, UUID folderId, String title, String fileKey, int type) {
-        // 존재 유무 & 본인 analysis 유무
+        // 존재 유무 & 본인 folder 유무
         Folder folder = folderRepo.findById(folderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 폴더를 찾을 수 없습니다."));
         if (!folder.getUserId().equals(userId)) {
@@ -202,8 +201,8 @@ public class AnalysisService {
         try {
             log.info("비동기 분석 데이터 가공 시작 - fileKey: {}", fileKey);
 
-            // 1. 대기 상태 Analysis 조회
-            Analysis analysis = analysisRepo.findById(resultInput.getAnalysisId())
+            // 1. 대기 혹은 실패 상태 Analysis 조회
+            Analysis analysis = analysisRepo.findByIdAndStatusNot(resultInput.getAnalysisId(), COMPLETED)
                     .orElseThrow(() -> new RuntimeException("대기 중인 분석 기록이 없습니다."));
 
             // 2. Folder의 updatedAt 갱신
