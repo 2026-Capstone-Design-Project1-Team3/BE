@@ -243,6 +243,9 @@ public class AnalysisService {
                     finalFeedback = openAiService.generateFinalFeedback(resultInput, question);
                     finalScore = openAiService.generateInterviewScore(resultInput.getTranscript(), question);
                 }
+            } else{
+                // type = 0일때(발표)
+                finalFeedback = openAiService.generateFinalFeedback(resultInput, folder.getExtraInfo());
             }
 
             // 4. Analysis 엔티티 업데이트
