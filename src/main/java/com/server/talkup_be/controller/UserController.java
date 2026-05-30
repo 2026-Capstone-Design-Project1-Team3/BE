@@ -124,7 +124,7 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<?> profile(@AuthenticationPrincipal String userIdStr) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -148,7 +148,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
         }
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -173,7 +173,7 @@ public class UserController {
     @GetMapping("/eye")
     public ResponseEntity<?> EyeProfile(@AuthenticationPrincipal String userIdStr) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -196,7 +196,7 @@ public class UserController {
             @RequestHeader("X-Internal-Secret") String secretHeader,
             @RequestBody UserDto.UserEyeInput userEye) {
         try {
-            // 1. 키 분석 (ai가 준 시크릿 키)
+            // 1. 키 분석 (AI)
             if (!internalSecret.equals(secretHeader)) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "허가되지 않은 접근입니다.");
             }
@@ -221,7 +221,7 @@ public class UserController {
     @DeleteMapping("/delete")
     public ResponseEntity<?> delete(@AuthenticationPrincipal String userIdStr) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출

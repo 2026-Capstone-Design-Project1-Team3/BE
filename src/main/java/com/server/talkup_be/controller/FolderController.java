@@ -49,7 +49,7 @@ public class FolderController {
             @AuthenticationPrincipal String userIdStr,
             @RequestBody FolderDto.FolderInput folderInput) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -76,7 +76,7 @@ public class FolderController {
             @RequestParam(defaultValue = "0") Integer how,
             @RequestParam(required = false) String keyWord) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -98,7 +98,7 @@ public class FolderController {
             @AuthenticationPrincipal String userIdStr,
             @PathVariable UUID folderId) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -120,7 +120,7 @@ public class FolderController {
             @AuthenticationPrincipal String userIdStr,
             @RequestBody FolderDto.FolderDeleteList folderIds) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
@@ -142,7 +142,7 @@ public class FolderController {
             @AuthenticationPrincipal String userIdStr,
             @PathVariable("folderId") UUID folderId) {
         try {
-            // 1. 토큰 추출 (프론트가 준 토큰)
+            // 1. 토큰 추출
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
