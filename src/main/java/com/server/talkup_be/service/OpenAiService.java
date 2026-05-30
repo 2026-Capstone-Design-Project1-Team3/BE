@@ -284,7 +284,6 @@ public class OpenAiService {
                 "조건 2: 첫 번째 항목은 1줄짜리 전체 총평이며, 무조건 '~다.' 로 끝나야 해.\n" +
                 "조건 3: 나머지 4개 항목(강점 2개, 개선사항 2개)은 구체적인 '명사구' 형태로 작성해.\n" +
                 "예시: 전체적인 전달력은 우수하지만, 결론부의 강조를 위한 완급 조절이 보완되면 완벽한 발표가 될 것입니다.<q>안정적인 시선 처리 및 청중 교감<q>자연스러운 제스처와 신체 언어<q>핵심 키워드 발음 시 강세 조절<q>대본의 결론부 구체성 추가";
-
         // 2. 배경 정보 이름 설정
         String contextType = (result.getType() == 0) ? "원본 발표 대본 (비교용)" : "면접 질문";
         String safeBackgroundInfo = (backgroundInfo != null && !backgroundInfo.isBlank()) ? backgroundInfo : "제공되지 않음";

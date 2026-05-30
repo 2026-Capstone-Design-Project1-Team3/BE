@@ -282,6 +282,7 @@ public class AnalysisService {
                             folder.getInputText(),
                             recentSummaries
                     );
+                    newOutputText = newOutputText.replaceAll("^\\s*\\d+\\.\\s*", "");
 
                     // folder update
                     folder.setOutputText(newOutputText);
