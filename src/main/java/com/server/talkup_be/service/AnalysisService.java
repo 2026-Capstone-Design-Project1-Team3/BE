@@ -269,6 +269,32 @@ public class AnalysisService {
                     finalFeedback
             );
 
+            // 꼬리질문 생성
+            if(analysis.getType() == 1){
+                try {
+                    // 1. 최근 분석 요약본 3개 (없으면 빈 리스트 반환)
+                    List<String> recentSummaries = analysisRepo.findTopSummaryByFolderId(folderId,PageRequest.of(0, 3));
+
+                    // 2. OpenAI 호출
+                    String newOutputText = openAiService.generateInterviewQuestionsWithFile(
+                            folder.getFileKey(),
+                            folder.getCompanyName(),
+                            folder.getInputText(),
+                            recentSummaries
+                    );
+
+                    // folder update
+                    folder.setOutputText(newOutputText);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("새로운 면접 질문 생성 중 서버 지연이 발생했습니다.: {}");
+                } catch (Exception e) {
+                    // S3 통신 실패 등 기타 에러 처리
+                    log.error("꼬리질문 생성 실패: {}", e.getMessage(), e);
+                    throw new RuntimeException("새로운 면접 질문 생성 실패: " + e.getMessage(), e);
+                }
+            }
+
             // 5. 프론트엔드로 SSE 알림 전송
             SseEmitter emitter = emitterRepo.get(fileKey);
             if (emitter != null) {

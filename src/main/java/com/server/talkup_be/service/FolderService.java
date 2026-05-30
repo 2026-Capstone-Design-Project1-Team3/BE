@@ -36,7 +36,7 @@ public class FolderService {
         // type=1이면? (면접이면)
         if (folderInput.getType() == 1) {
             try {
-                // 1. 최근 분석 요약본 3개 (없으면 빈 리스트 반환)
+                // 1. 최근 분석 요약본 3개 (생성중에는 없으니까 빈 리스트 반환)
                 List<String> recentSummaries = List.of();
 
 
