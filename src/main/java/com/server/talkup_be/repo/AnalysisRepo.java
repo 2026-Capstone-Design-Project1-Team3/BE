@@ -50,6 +50,17 @@ public interface AnalysisRepo extends JpaRepository<Analysis, UUID> {
             @Param("userId") UUID userId,
             Pageable pageable
     );
+
+    // 연습기록 최신 n개 요약들
+    @Query("SELECT a.summary " +
+            "FROM Analysis a WHERE " +
+            "a.folderId = :folderId " +
+            "ORDER BY a.createdAt DESC")
+    List<String> findTopSummaryByFolderId(
+            @Param("folderId") UUID folderId,
+            Pageable pageable
+    );
+
     // 연습기록 삭제
     @Modifying
     @Transactional

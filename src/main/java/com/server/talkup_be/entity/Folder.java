@@ -32,6 +32,7 @@ public class Folder {
 
     private String companyName;
 
+    @Setter
     @Column(columnDefinition = "LONGTEXT")
     private String outputText;
 

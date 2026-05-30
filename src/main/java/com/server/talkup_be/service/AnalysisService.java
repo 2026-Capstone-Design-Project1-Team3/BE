@@ -18,6 +18,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -129,7 +131,7 @@ public class AnalysisService {
 
     // 대기 상태 Analysis 생성
     @Transactional
-    public UUID createPendingAnalysis(UUID userId, UUID folderId, String title, String fileKey, int type) {
+    public List<String> createPendingAnalysis(UUID userId, UUID folderId, String title, String fileKey, int type) {
         // 존재 유무 & 본인 folder 유무
         Folder folder = folderRepo.findById(folderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 폴더를 찾을 수 없습니다."));
@@ -146,8 +148,11 @@ public class AnalysisService {
                 .type(type)
                 .build();
 
-        // 3. DB에 저장 후 analysisId 반환
-        return analysisRepo.save(pendingAnalysis).getId();
+        // 3. DB에 저장 후 analysisId, extraInfo 반환
+        UUID analysisId = analysisRepo.save(pendingAnalysis).getId();
+        String extraInfo = folderRepo.findById(folderId).get().getExtraInfo();
+        List<String> result = Arrays.asList(analysisId.toString(), extraInfo);
+        return result;
     }
 
     // ai 서버 analysis 분석 요청 실패시 실행
@@ -243,6 +248,9 @@ public class AnalysisService {
                     finalFeedback = openAiService.generateFinalFeedback(resultInput, question);
                     finalScore = openAiService.generateInterviewScore(resultInput.getTranscript(), question);
                 }
+            } else{
+                // type = 0일때(발표)
+                finalFeedback = openAiService.generateFinalFeedback(resultInput, folder.getExtraInfo());
             }
 
             // 4. Analysis 엔티티 업데이트
@@ -260,6 +268,32 @@ public class AnalysisService {
                     summary,
                     finalFeedback
             );
+
+            // 꼬리질문 생성
+            if(analysis.getType() == 1){
+                try {
+                    // 1. 최근 분석 요약본 3개 (없으면 빈 리스트 반환)
+                    List<String> recentSummaries = analysisRepo.findTopSummaryByFolderId(folderId,PageRequest.of(0, 3));
+
+                    // 2. OpenAI 호출
+                    String newOutputText = openAiService.generateInterviewQuestionsWithFile(
+                            folder.getFileKey(),
+                            folder.getCompanyName(),
+                            folder.getInputText(),
+                            recentSummaries
+                    );
+
+                    // folder update
+                    folder.setOutputText(newOutputText);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("새로운 면접 질문 생성 중 서버 지연이 발생했습니다.: {}");
+                } catch (Exception e) {
+                    // S3 통신 실패 등 기타 에러 처리
+                    log.error("꼬리질문 생성 실패: {}", e.getMessage(), e);
+                    throw new RuntimeException("새로운 면접 질문 생성 실패: " + e.getMessage(), e);
+                }
+            }
 
             // 5. 프론트엔드로 SSE 알림 전송
             SseEmitter emitter = emitterRepo.get(fileKey);
