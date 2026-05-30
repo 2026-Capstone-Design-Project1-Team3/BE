@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -142,7 +143,7 @@ public class AnalysisController {
         UUID userId = UUID.fromString(userIdStr);
 
         // 2. Analysis 대기 상태 생성
-        UUID analysisId = analysisService.createPendingAnalysis(userId, folderId, title, fileKey, type);
+        List<String> result = analysisService.createPendingAnalysis(userId, folderId, title, fileKey, type);
 
         // 3. SseEmitter 생성 (타임아웃 60분) 및 저장
         Long timeout = 60L * 1000 * 60;
@@ -160,13 +161,13 @@ public class AnalysisController {
         }
 
         // 5. AI 서버로 분석 시작 요청
-        triggerAiAnalysis(analysisId, fileKey, type);
+        triggerAiAnalysis(result.get(0), fileKey, type, result.get(1));
 
         return emitter;
     }
 
     // --- 내부 통신용 유틸 메서드 ---
-    private void triggerAiAnalysis(UUID analysisId, String fileKey, int type) {
+    private void triggerAiAnalysis(String analysisId, String fileKey, int type, String extraInfo) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-Internal-Secret", internalSecret);
@@ -174,7 +175,8 @@ public class AnalysisController {
         Map<String, Object> body = Map.of(
                 "analysisId", analysisId,
                 "fileKey", fileKey,
-                "type", type
+                "type", type,
+                "extraInfo", extraInfo
         );
 
         try {
@@ -187,7 +189,7 @@ public class AnalysisController {
         } catch (Exception e) {
             log.error("AI 서버 분석 요청 실패", e);
             // 1. 대기 상태 Analysis 및 fileKey 영상 지우기
-            analysisService.rollbackPendingAnalysis(analysisId, fileKey);
+            analysisService.rollbackPendingAnalysis(UUID.fromString(analysisId), fileKey);
         }
     }
 

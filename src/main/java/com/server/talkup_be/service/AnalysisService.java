@@ -18,6 +18,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -129,7 +131,7 @@ public class AnalysisService {
 
     // 대기 상태 Analysis 생성
     @Transactional
-    public UUID createPendingAnalysis(UUID userId, UUID folderId, String title, String fileKey, int type) {
+    public List<String> createPendingAnalysis(UUID userId, UUID folderId, String title, String fileKey, int type) {
         // 존재 유무 & 본인 folder 유무
         Folder folder = folderRepo.findById(folderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 폴더를 찾을 수 없습니다."));
@@ -146,8 +148,11 @@ public class AnalysisService {
                 .type(type)
                 .build();
 
-        // 3. DB에 저장 후 analysisId 반환
-        return analysisRepo.save(pendingAnalysis).getId();
+        // 3. DB에 저장 후 analysisId, extraInfo 반환
+        UUID analysisId = analysisRepo.save(pendingAnalysis).getId();
+        String extraInfo = folderRepo.findById(folderId).get().getExtraInfo();
+        List<String> result = Arrays.asList(analysisId.toString(), extraInfo);
+        return result;
     }
 
     // ai 서버 analysis 분석 요청 실패시 실행
