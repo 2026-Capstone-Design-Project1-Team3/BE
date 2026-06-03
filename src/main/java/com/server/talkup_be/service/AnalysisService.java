@@ -78,10 +78,12 @@ public class AnalysisService {
                 .summary(analysis.getSummary())
                 .createdAt(analysis.getCreatedAt())
                 .gazeScore(analysis.getGazeScore())
+                .gazeFeedback(analysis.getGazeFeedback())
                 .gazeDistribution(analysis.getGazeDistribution())
                 .fluencyLevel(analysis.getFluencyLevel())
                 .fluencyFeedback(analysis.getFluencyFeedback())
                 .speedScore(analysis.getSpeedScore())
+                .speedSpm(analysis.getSpeedSpm())
                 .speedDistribution(analysis.getSpeedDistribution())
                 .gestureFeedbackWord(analysis.getGestureFeedbackWord())
                 .gestureFeedbackSentence(analysis.getGestureFeedbackSentence())
@@ -256,10 +258,12 @@ public class AnalysisService {
             // 4. Analysis 엔티티 업데이트
             analysis.updateAnalysisResult(
                     resultInput.getGazeScore(),
+                    resultInput.getGazeFeedback(),
                     resultInput.getGazeDistribution(),
                     resultInput.getFluencyLevel(),
                     resultInput.getFluencyFeedback(),
                     resultInput.getSpeedScore(),
+                    resultInput.getSpeedSpm(),
                     resultInput.getSpeedDistribution(),
                     resultInput.getGestureFeedbackWord(),
                     resultInput.getGestureFeedbackSentence(),

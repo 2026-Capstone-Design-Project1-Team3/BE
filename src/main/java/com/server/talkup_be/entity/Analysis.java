@@ -56,9 +56,14 @@ public class Analysis {
 
     private Integer gazeScore;
 
+    @Column(columnDefinition = "LONGTEXT")
+    private String gazeFeedback;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "json")
     private GazeDistribution gazeDistribution;
+
+    private Float speedSpm;
 
     private Integer fluencyLevel;
 
@@ -94,12 +99,14 @@ public class Analysis {
         }
     }
 
-    public void updateAnalysisResult(Integer gazeScore, GazeDistribution gazeDistribution, Integer fluencyLevel, String fluencyFeedback, Integer speedScore, SpeedDistribution speedDistribution, String gestureFeedbackWord, String gestureFeedbackSentence, int finalScore, String transcript, String summary, String finalFeedback) {
+    public void updateAnalysisResult(Integer gazeScore, String gazeFeedback, GazeDistribution gazeDistribution, Integer fluencyLevel, String fluencyFeedback, Integer speedScore, Float speedSpm, SpeedDistribution speedDistribution, String gestureFeedbackWord, String gestureFeedbackSentence, int finalScore, String transcript, String summary, String finalFeedback) {
         this.gazeScore = gazeScore;
+        this.gazeFeedback = gazeFeedback;
         this.gazeDistribution = gazeDistribution;
         this.fluencyLevel = fluencyLevel;
         this.fluencyFeedback = fluencyFeedback;
         this.speedScore = speedScore;
+        this.speedSpm = speedSpm;
         this.speedDistribution = speedDistribution;
         this.gestureFeedbackWord = gestureFeedbackWord;
         this.gestureFeedbackSentence = gestureFeedbackSentence;

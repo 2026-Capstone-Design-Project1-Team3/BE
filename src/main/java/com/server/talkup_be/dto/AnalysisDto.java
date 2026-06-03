@@ -50,10 +50,12 @@ public class AnalysisDto {
     public static class ResultInput {
         private UUID analysisId;
         private Integer gazeScore;
+        private String gazeFeedback;
         private GazeDistribution gazeDistribution;
         private Integer fluencyLevel;
         private String fluencyFeedback;
         private Integer speedScore;
+        private Float speedSpm;
         private SpeedDistribution speedDistribution;
         private String gestureFeedbackWord;
         private String gestureFeedbackSentence;
@@ -79,10 +81,12 @@ public class AnalysisDto {
         private LocalDateTime createdAt;
 
         private Integer gazeScore;
+        private String gazeFeedback;
         private GazeDistribution gazeDistribution;
         private Integer fluencyLevel;
         private String fluencyFeedback;
         private Integer speedScore;
+        private Float speedSpm;
         private SpeedDistribution speedDistribution;
         private String gestureFeedbackWord;
         private String gestureFeedbackSentence;
