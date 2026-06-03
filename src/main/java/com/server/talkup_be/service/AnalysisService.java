@@ -256,11 +256,13 @@ public class AnalysisService {
             // 4. Analysis 엔티티 업데이트
             analysis.updateAnalysisResult(
                     resultInput.getGazeScore(),
+                    resultInput.getGazeFeedback(),
                     resultInput.getGazeDistribution(),
                     resultInput.getFluencyLevel(),
                     resultInput.getFluencyFeedback(),
                     resultInput.getSpeedScore(),
                     resultInput.getSpeedDistribution(),
+                    resultInput.getSpeedSpm(),
                     resultInput.getGestureFeedbackWord(),
                     resultInput.getGestureFeedbackSentence(),
                     finalScore,
