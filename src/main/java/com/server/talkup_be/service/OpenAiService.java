@@ -58,7 +58,7 @@ public class OpenAiService {
     }
 
     // 면접 예상 질문 5개 생성
-    public String generateInterviewQuestionsWithFile(String fileKey, String companyName, String inputText, List<String> recentSummaries) throws InterruptedException {
+    public String generateInterviewQuestionsWithFile(String fileKey, String companyName, String inputText, List<String> recentSummaries, String previousQuestions) throws InterruptedException {
         // 1. S3에서 파일 바이트로 가져오기
         byte[] pdfBytes = s3Client.getObjectAsBytes(GetObjectRequest.builder()
                 .bucket(bucketName).key(fileKey).build()).asByteArray();
@@ -72,6 +72,15 @@ public class OpenAiService {
                 companyName != null ? companyName : "알 수 없음",
                 inputText != null ? inputText : "일반적인 직무 역량 기반"));
 
+        // 이전 질문이 존재할 경우 (중복 방지 룰 주입)
+        if (previousQuestions != null && !previousQuestions.isBlank()) {
+            userPromptBuilder.append("[이전에 했던 질문들]\n")
+                    // 기존 폴더에 <q>로 묶인 질문들을 줄바꿈으로 바꿔서 보여줌
+                    .append(previousQuestions.replace("<q>", "\n"))
+                    .append("\n\n🚨 [절대 규칙 1]: 위 [이전에 했던 질문들]과 의미가 겹치거나, 이미 물어본 내용을 단순하게 다시 묻는 질문은 절대 생성하지 마.\n");
+        }
+
+        // 요약본(답변)이 존재 여부
         if (recentSummaries == null || recentSummaries.isEmpty()) {
             userPromptBuilder.append("첨부된 파일을 바탕으로, 실전 면접 예상 질문 딱 5개만 생성해 줘.");
         } else {
@@ -83,8 +92,13 @@ public class OpenAiService {
         }
 
         // 파싱을 위한 절대 규칙
-        userPromptBuilder.append("\n\n조건: 반드시 각 질문 사이에만 '<q>' 구분자를 넣어서 한 줄로 출력해. 숫자(1., 2.), 줄바꿈, 【4:6†material.pdf】 같은 출처 주석 기호나 인사말은 절대 넣지 마.");
-
+        userPromptBuilder.append("\n[질문 생성 전략 (아래 5가지 유형으로 각각 1개씩, 총 5개 생성)]\n" +
+                "1. (구체성 압박): 지원자가 언급한 '해결 방법'이나 '성과'에 대해, 구체적으로 어떤 기준과 근거로 그런 결정을 내렸는지 파고드는 질문.\n" +
+                "2. (한계점 및 트레이드오프): 지원자가 취한 행동이나 전략의 단점, 포기해야 했던 것, 혹은 아쉬웠던 점을 날카롭게 묻는 질문.\n" +
+                "3. (위기 및 변수 대처): \"만약 그 상황에서 ~한 예상치 못한 문제(반대 의견, 자원 부족 등)가 발생했다면?\" 이라는 가정형 압박 질문.\n" +
+                "4. (조직 적합성/협업): 해당 경험을 진행하며 발생한 의견 충돌이나 설득의 과정, 혹은 팀의 목표를 위해 개인의 의견을 양보한 적이 있는지 묻는 소프트스킬 질문.\n" +
+                "5. (실무 적용력): 지원자의 경험과 노하우를 우리 회사(지원한 기업/직무)의 실무에 투입되었을 때 어떻게 적용하고 기여할 수 있는지 묻는 질문.\n\n" +
+                "[출력 절대 규칙]: 반드시 각 질문 사이에만 '<q>' 구분자를 넣어서 한 줄로 출력해. 앞에 숫자(1., 2. 등), 줄바꿈, 출처 주석(【4:6†material.pdf】 등), 인사말은 절대 포함하지 마.");
         // 4. 면접 질문 전용 Thread 생성 및 Run
         Map<String, String> ids = createInterviewThreadAndRun(fileId, userPromptBuilder.toString());
         String threadId = ids.get("thread_id");
