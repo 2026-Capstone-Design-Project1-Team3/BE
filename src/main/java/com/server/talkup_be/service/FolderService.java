@@ -31,7 +31,7 @@ public class FolderService {
     }
 
     //폴더 생성
-    public void saveFolderData(UUID userId, FolderDto.FolderInput folderInput) {
+    public UUID saveFolderData(UUID userId, FolderDto.FolderInput folderInput) {
         String newOutputText = "";
         // type=1이면? (면접이면)
         if (folderInput.getType() == 1) {
@@ -68,7 +68,8 @@ public class FolderService {
                 .type(folderInput.getType())
                 .build();
 
-        folderRepo.save(newFolder);
+        Folder result = folderRepo.save(newFolder);
+        return result.getId();
     }
 
     //폴더 미리보기 반환

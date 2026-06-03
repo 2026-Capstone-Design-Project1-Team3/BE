@@ -53,9 +53,9 @@ public class FolderController {
             UUID userId = UUID.fromString(userIdStr);
 
             // 2. Service 호출
-            folderService.saveFolderData(userId, folderInput);
+            UUID folderId = folderService.saveFolderData(userId, folderInput);
 
-            return ResponseEntity.ok().body("폴더 생성이 성공적으로 설정되었습니다.");
+            return ResponseEntity.ok().body(folderId);
 
         }  catch (IllegalArgumentException | IllegalStateException e) {
             // 프론트가 값을 잘못 보냈거나 권한이 없을 때 (400 or 403)
