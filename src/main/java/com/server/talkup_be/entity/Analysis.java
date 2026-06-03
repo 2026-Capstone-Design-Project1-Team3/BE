@@ -99,15 +99,15 @@ public class Analysis {
         }
     }
 
-    public void updateAnalysisResult(Integer gazeScore, String gazeFeedback, GazeDistribution gazeDistribution, Integer fluencyLevel, String fluencyFeedback, Integer speedScore, SpeedDistribution speedDistribution, Float speedSpm, String gestureFeedbackWord, String gestureFeedbackSentence, int finalScore, String transcript, String summary, String finalFeedback) {
+    public void updateAnalysisResult(Integer gazeScore, String gazeFeedback, GazeDistribution gazeDistribution, Integer fluencyLevel, String fluencyFeedback, Integer speedScore, Float speedSpm, SpeedDistribution speedDistribution, String gestureFeedbackWord, String gestureFeedbackSentence, int finalScore, String transcript, String summary, String finalFeedback) {
         this.gazeScore = gazeScore;
         this.gazeFeedback = gazeFeedback;
         this.gazeDistribution = gazeDistribution;
         this.fluencyLevel = fluencyLevel;
         this.fluencyFeedback = fluencyFeedback;
         this.speedScore = speedScore;
-        this.speedDistribution = speedDistribution;
         this.speedSpm = speedSpm;
+        this.speedDistribution = speedDistribution;
         this.gestureFeedbackWord = gestureFeedbackWord;
         this.gestureFeedbackSentence = gestureFeedbackSentence;
         this.finalScore = finalScore;

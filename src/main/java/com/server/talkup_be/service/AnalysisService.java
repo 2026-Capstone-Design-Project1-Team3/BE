@@ -78,10 +78,12 @@ public class AnalysisService {
                 .summary(analysis.getSummary())
                 .createdAt(analysis.getCreatedAt())
                 .gazeScore(analysis.getGazeScore())
+                .gazeFeedback(analysis.getGazeFeedback())
                 .gazeDistribution(analysis.getGazeDistribution())
                 .fluencyLevel(analysis.getFluencyLevel())
                 .fluencyFeedback(analysis.getFluencyFeedback())
                 .speedScore(analysis.getSpeedScore())
+                .speedSpm(analysis.getSpeedSpm())
                 .speedDistribution(analysis.getSpeedDistribution())
                 .gestureFeedbackWord(analysis.getGestureFeedbackWord())
                 .gestureFeedbackSentence(analysis.getGestureFeedbackSentence())
@@ -261,8 +263,8 @@ public class AnalysisService {
                     resultInput.getFluencyLevel(),
                     resultInput.getFluencyFeedback(),
                     resultInput.getSpeedScore(),
-                    resultInput.getSpeedDistribution(),
                     resultInput.getSpeedSpm(),
+                    resultInput.getSpeedDistribution(),
                     resultInput.getGestureFeedbackWord(),
                     resultInput.getGestureFeedbackSentence(),
                     finalScore,

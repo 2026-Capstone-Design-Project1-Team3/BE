@@ -55,8 +55,8 @@ public class AnalysisDto {
         private Integer fluencyLevel;
         private String fluencyFeedback;
         private Integer speedScore;
-        private SpeedDistribution speedDistribution;
         private Float speedSpm;
+        private SpeedDistribution speedDistribution;
         private String gestureFeedbackWord;
         private String gestureFeedbackSentence;
         private Integer finalScore;
@@ -81,10 +81,12 @@ public class AnalysisDto {
         private LocalDateTime createdAt;
 
         private Integer gazeScore;
+        private String gazeFeedback;
         private GazeDistribution gazeDistribution;
         private Integer fluencyLevel;
         private String fluencyFeedback;
         private Integer speedScore;
+        private Float speedSpm;
         private SpeedDistribution speedDistribution;
         private String gestureFeedbackWord;
         private String gestureFeedbackSentence;
