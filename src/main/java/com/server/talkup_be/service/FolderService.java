@@ -39,18 +39,13 @@ public class FolderService {
                 // 1. 최근 분석 요약본 3개 (생성중에는 없으니까 빈 리스트 반환)
                 List<String> recentSummaries = List.of();
 
-
-                // 질문 추가 생성 로직
-//              List<Analysis> analyses = analysisRepo.findTop3ByFolderIdOrderByCreatedAtDesc(folderId);
-//              recentSummaries = analyses.stream().map(Analysis::getSummary).toList();
-
-
                 // 2. OpenAI 호출
                 newOutputText = openAiService.generateInterviewQuestionsWithFile(
                         folderInput.getFileKey(),
                         folderInput.getCompanyName(),
                         folderInput.getInputText(),
-                        recentSummaries
+                        recentSummaries,
+                        null
                 );
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

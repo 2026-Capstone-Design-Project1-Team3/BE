@@ -272,6 +272,9 @@ public class AnalysisService {
             // 꼬리질문 생성
             if(analysis.getType() == 1){
                 try {
+                    // 질문들 가져오기
+                    String previousQuestions = folder.getOutputText();
+
                     // 1. 최근 분석 요약본 3개 (없으면 빈 리스트 반환)
                     List<String> recentSummaries = analysisRepo.findTopSummaryByFolderId(folderId,PageRequest.of(0, 3));
 
@@ -280,8 +283,10 @@ public class AnalysisService {
                             folder.getFileKey(),
                             folder.getCompanyName(),
                             folder.getInputText(),
-                            recentSummaries
+                            recentSummaries,
+                            previousQuestions
                     );
+                    newOutputText = newOutputText.replaceAll("^\\s*\\d+\\.\\s*", "");
 
                     // folder update
                     folder.setOutputText(newOutputText);

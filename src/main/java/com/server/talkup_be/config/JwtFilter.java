@@ -30,14 +30,14 @@ public class JwtFilter extends OncePerRequestFilter {
         String method = request.getMethod();
 
         // 이 주소들로 들어오는 요청은 헤더에 만료된 토큰이 있든 없든 무조건 통과!
-        return path.startsWith("/user/login") ||
-                path.startsWith("/user/signUp") ||
-                path.startsWith("/user/check") ||
+        return path.equals("/user/login") ||
+                path.equals("/user/signUp") ||
+                path.equals("/user/check") ||
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/v3/api-docs") ||
                 path.startsWith("/error") ||
-                (path.startsWith("/user/eye") && method.equalsIgnoreCase("POST")) ||
-                (path.startsWith("/analysis") && method.equalsIgnoreCase("POST"));
+                (path.equals("/user/eye") && method.equalsIgnoreCase("POST")) ||
+                (path.equals("/analysis") && method.equalsIgnoreCase("POST"));
     }
 
     @Override
