@@ -1,6 +1,7 @@
 package com.server.talkup_be.config;
 
 import com.server.talkup_be.service.RedisBlacklistService;
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -60,8 +61,8 @@ public class SecurityConfig {
                         // AI소통(시크릿키만 사용)
                         .requestMatchers(HttpMethod.POST, "/user/eye").permitAll()
                         .requestMatchers(HttpMethod.POST, "/analysis").permitAll()
-                        // 에러 확인 - 전부 개발 후 지우기
-                        .requestMatchers("/error").permitAll()
+                        // ASYNC 타입의 디스패처는 시큐리티 인증을 타지 않도록 허용
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         // 그 외는 토큰 필요
                         .anyRequest().authenticated()
                 )
