@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @RestController
@@ -161,8 +162,10 @@ public class AnalysisController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "알림 연결 실패");
         }
 
-        // 5. AI 서버로 분석 시작 요청
-        triggerAiAnalysis(result.getAnalysisId(), fileKey, type, result.getExtraInfo(), result.getEyeCalibration());
+        // 5. AI 서버로 분석 시작 요청(비동기 스레드)
+        CompletableFuture.runAsync(() -> {
+            triggerAiAnalysis(result.getAnalysisId(), fileKey, type, result.getExtraInfo(), result.getEyeCalibration());
+        });
 
         return emitter;
     }
