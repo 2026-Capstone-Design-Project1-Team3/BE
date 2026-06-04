@@ -1,9 +1,11 @@
 package com.server.talkup_be.service;
 
 import com.server.talkup_be.dto.FolderDto;
+import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.entity.Folder;
 import com.server.talkup_be.repo.AnalysisRepo;
 import com.server.talkup_be.repo.FolderRepo;
+import com.server.talkup_be.repo.UserRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,12 +22,14 @@ import java.util.stream.Collectors;
 public class FolderService {
     private final FolderRepo folderRepo;
     private final AnalysisRepo analysisRepo;
+    private final UserRepo userRepo;
     private final S3Service s3Service;
     private final OpenAiService openAiService;
 
-    public FolderService(FolderRepo folderRepo, AnalysisRepo analysisRepo, S3Service s3Service, OpenAiService openAiService) {
+    public FolderService(FolderRepo folderRepo, AnalysisRepo analysisRepo, UserRepo userRepo, S3Service s3Service, OpenAiService openAiService) {
         this.folderRepo = folderRepo;
         this.analysisRepo = analysisRepo;
+        this.userRepo = userRepo;
         this.s3Service = s3Service;
         this.openAiService = openAiService;
     }
@@ -159,7 +163,7 @@ public class FolderService {
         return analysisRepo.findStatisticsByFolderId(folderId);
     }
 
-    // folder의 연습기록들 통계 조회
+    // folder의 세팅 조회
     @Transactional(readOnly = true)
     public FolderDto.FolderSettingRes getFolderSetting(UUID userId, UUID folderId) {
         // folderId로 폴더 존재 여부 검사 (없으면 404 에러)
@@ -191,6 +195,11 @@ public class FolderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 폴더 타입입니다.");
         }
 
-        return new FolderDto.FolderSettingRes(resultContents);
+        EyeCalibration userEyeCalibration = userRepo.findById(userId).get().getEyeCalibration();
+
+        return FolderDto.FolderSettingRes.builder()
+                .set(resultContents)
+                .eyeCalibration(userEyeCalibration)
+                .build();
     }
 }
