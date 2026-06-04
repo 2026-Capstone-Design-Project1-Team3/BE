@@ -1,17 +1,15 @@
 package com.server.talkup_be.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import java.util.concurrent.TimeUnit;
 
+@RequiredArgsConstructor
 @Service
 public class RedisBlacklistService {
 
     private final StringRedisTemplate redisTemplate;
-
-    public RedisBlacklistService(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
 
     // 1. 토큰을 Redis에 저장 (남은 시간만큼만 보관하고 자동 삭제됨!)
     public void setBlacklist(String token, long remainingTime) {

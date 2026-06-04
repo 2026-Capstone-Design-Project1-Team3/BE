@@ -1,6 +1,7 @@
 package com.server.talkup_be.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.entity.GazeDistribution;
 import com.server.talkup_be.entity.SpeedDistribution;
 import lombok.*;
@@ -121,5 +122,15 @@ public class AnalysisDto {
     @ToString
     public static class AnalysisDeleteList {
         private List<UUID> analysisId;
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public static class PendingAnalysisResult {
+        private UUID analysisId;
+        private String extraInfo;
+        private EyeCalibration eyeCalibration;
     }
 }

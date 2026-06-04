@@ -5,24 +5,19 @@ import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.entity.User;
 import com.server.talkup_be.exception.MissingCalibrationException;
 import com.server.talkup_be.repo.UserRepo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-
+@RequiredArgsConstructor
 @Service
 public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepo userRepo;
     private final FolderService folderService;
-
-    public UserService(PasswordEncoder passwordEncoder, UserRepo userRepo, FolderService folderService) {
-        this.passwordEncoder = passwordEncoder;
-        this.userRepo = userRepo;
-        this.folderService = folderService;
-    }
 
     // user login 확인
     public User validateUser(String loginId, String passWord) {

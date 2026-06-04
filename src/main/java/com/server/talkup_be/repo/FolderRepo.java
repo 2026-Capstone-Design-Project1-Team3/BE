@@ -21,7 +21,7 @@ public interface FolderRepo extends JpaRepository<Folder, UUID> {
     Integer countFilteredFolders(UUID userId, Integer type, String keyWord);
 
     // 폴더 미리보기 조회
-    @Query("SELECT new com.server.talkup_be.dto.FolderDto$FolderInfo(" +
+    @Query("SELECT new com.server.talkup_be.dto.FolderDto$FolderCardnewsInfo(" +
             "f.id, f.title, f.type, f.updatedAt, COUNT(a.id)) " +
             "FROM Folder f " +
             "LEFT JOIN Analysis a ON f.id = a.folderId " +
@@ -29,7 +29,7 @@ public interface FolderRepo extends JpaRepository<Folder, UUID> {
             "AND (:type IS NULL OR f.type = :type) " +
             "AND (:keyWord IS NULL OR f.title LIKE :keyWord) " +
             "GROUP BY f.id, f.title, f.type, f.updatedAt")
-    List<FolderDto.FolderInfo> findFolders(@Param("userId") UUID userId,
+    List<FolderDto.FolderCardnewsInfo> findFolders(@Param("userId") UUID userId,
                                            @Param("type") Integer type,
                                            @Param("keyWord") String keyWord,
                                            Pageable pageable);
