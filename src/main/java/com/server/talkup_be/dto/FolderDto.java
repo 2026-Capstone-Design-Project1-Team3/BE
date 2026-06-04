@@ -24,6 +24,18 @@ public class FolderDto {
     @AllArgsConstructor
     @ToString
     public static class FolderInfo {
+        private String title;
+        private String fileName;
+        private String extraInfo;
+        private String companyName;
+        private String inputText;
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public static class FolderCardnewsInfo {
         private UUID folderId;
         private String title;
         private Integer type;

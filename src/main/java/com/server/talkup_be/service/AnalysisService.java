@@ -39,8 +39,6 @@ public class AnalysisService {
     private final EmitterRepo emitterRepo;
     private final OpenAiService openAiService;
 
-    //TODO: 여기는 왜 public 재정의 없음?
-
     // 연습기록 간이(미리보기) 조회
     public AnalysisDto.AnalysisCardnewsInfo getAnalysisCardnewsData(UUID userId, UUID folderId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
         // 키워드 % 추가

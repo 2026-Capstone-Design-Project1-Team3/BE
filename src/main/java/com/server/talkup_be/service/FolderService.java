@@ -6,6 +6,7 @@ import com.server.talkup_be.entity.Folder;
 import com.server.talkup_be.repo.AnalysisRepo;
 import com.server.talkup_be.repo.FolderRepo;
 import com.server.talkup_be.repo.UserRepo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service
 public class FolderService {
     private final FolderRepo folderRepo;
@@ -25,14 +27,6 @@ public class FolderService {
     private final UserRepo userRepo;
     private final S3Service s3Service;
     private final OpenAiService openAiService;
-
-    public FolderService(FolderRepo folderRepo, AnalysisRepo analysisRepo, UserRepo userRepo, S3Service s3Service, OpenAiService openAiService) {
-        this.folderRepo = folderRepo;
-        this.analysisRepo = analysisRepo;
-        this.userRepo = userRepo;
-        this.s3Service = s3Service;
-        this.openAiService = openAiService;
-    }
 
     //폴더 생성
     public UUID saveFolderData(UUID userId, FolderDto.FolderInput folderInput) {
@@ -77,7 +71,7 @@ public class FolderService {
     }
 
     //폴더 미리보기 반환
-    public List<FolderDto.FolderInfo> getFolderData(UUID userId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
+    public List<FolderDto.FolderCardnewsInfo> getFolderCardnewsData(UUID userId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
         // 키워드 % 추가
         String processedKeyWord = null;
         if (keyWord != null && !keyWord.isEmpty()) {
@@ -96,6 +90,24 @@ public class FolderService {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
 
         return folderRepo.findFolders(userId, type, processedKeyWord, pageable);
+    }
+
+    // 폴더 상세정보 반환
+    public FolderDto.FolderInfo getFolderData(UUID userId, UUID folderId) {
+        // folderId로 폴더 존재 여부 검사 (없으면 404 에러)
+        Folder folder = folderRepo.findById(folderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 폴더입니다."));
+        //folder의 userId로 권한 검사
+        if (!folder.getUserId().equals(userId)) {
+            throw new IllegalStateException("접근 권한이 없는 폴더입니다.");
+        }
+        return FolderDto.FolderInfo.builder()
+                .title(folder.getTitle())
+                .fileName(folder.getFileName())
+                .extraInfo(folder.getExtraInfo())
+                .companyName(folder.getCompanyName())
+                .inputText(folder.getInputText())
+                .build();
     }
 
     //폴더 삭제
@@ -202,4 +214,5 @@ public class FolderService {
                 .eyeCalibration(userEyeCalibration)
                 .build();
     }
+
 }
