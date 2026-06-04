@@ -1,6 +1,7 @@
 package com.server.talkup_be.controller;
 
 import com.server.talkup_be.dto.AnalysisDto;
+import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.repo.EmitterRepo;
 import com.server.talkup_be.service.AnalysisService;
 import lombok.RequiredArgsConstructor;
@@ -143,7 +144,7 @@ public class AnalysisController {
         UUID userId = UUID.fromString(userIdStr);
 
         // 2. Analysis 대기 상태 생성
-        List<String> result = analysisService.createPendingAnalysis(userId, folderId, title, fileKey, type);
+        AnalysisDto.PendingAnalysisResult result = analysisService.createPendingAnalysis(userId, folderId, title, fileKey, type);
 
         // 3. SseEmitter 생성 (타임아웃 60분) 및 저장
         Long timeout = 60L * 1000 * 60;
@@ -161,13 +162,13 @@ public class AnalysisController {
         }
 
         // 5. AI 서버로 분석 시작 요청
-        triggerAiAnalysis(result.get(0), fileKey, type, result.get(1));
+        triggerAiAnalysis(result.getAnalysisId(), fileKey, type, result.getExtraInfo(), result.getEyeCalibration());
 
         return emitter;
     }
 
     // --- 내부 통신용 유틸 메서드 ---
-    private void triggerAiAnalysis(String analysisId, String fileKey, int type, String extraInfo) {
+    private void triggerAiAnalysis(UUID analysisId, String fileKey, int type, String extraInfo, EyeCalibration eyeCalibration) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-Internal-Secret", internalSecret);
@@ -176,7 +177,8 @@ public class AnalysisController {
                 "analysisId", analysisId,
                 "fileKey", fileKey,
                 "type", type,
-                "extraInfo", extraInfo
+                "extraInfo", extraInfo,
+                "eyeCalibration", eyeCalibration
         );
 
         try {
@@ -189,7 +191,7 @@ public class AnalysisController {
         } catch (Exception e) {
             log.error("AI 서버 분석 요청 실패", e);
             // 1. 대기 상태 Analysis 및 fileKey 영상 지우기
-            analysisService.rollbackPendingAnalysis(UUID.fromString(analysisId), fileKey);
+            analysisService.rollbackPendingAnalysis(analysisId, fileKey);
         }
     }
 
