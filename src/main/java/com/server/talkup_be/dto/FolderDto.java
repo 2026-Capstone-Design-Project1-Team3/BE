@@ -1,6 +1,7 @@
 package com.server.talkup_be.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.server.talkup_be.entity.EyeCalibration;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,18 @@ public class FolderDto {
     @AllArgsConstructor
     @ToString
     public static class FolderInfo {
+        private String title;
+        private String fileName;
+        private String extraInfo;
+        private String companyName;
+        private String inputText;
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public static class FolderCardnewsInfo {
         private UUID folderId;
         private String title;
         private Integer type;
@@ -67,11 +80,13 @@ public class FolderDto {
             this.finalScore = (int) Math.round(finalScore);
         }
     }
+    @Builder
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
     public static class FolderSettingRes {
         private String set; // type=0 일 때는 PDF 다운로드 URL, type=1 일 때는 면접 질문 텍스트
+        private EyeCalibration eyeCalibration;
     }
     @Getter
     @NoArgsConstructor

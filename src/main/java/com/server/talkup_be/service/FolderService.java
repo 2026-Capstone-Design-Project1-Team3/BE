@@ -1,9 +1,12 @@
 package com.server.talkup_be.service;
 
 import com.server.talkup_be.dto.FolderDto;
+import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.entity.Folder;
 import com.server.talkup_be.repo.AnalysisRepo;
 import com.server.talkup_be.repo.FolderRepo;
+import com.server.talkup_be.repo.UserRepo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -16,22 +19,17 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service
 public class FolderService {
     private final FolderRepo folderRepo;
     private final AnalysisRepo analysisRepo;
+    private final UserRepo userRepo;
     private final S3Service s3Service;
     private final OpenAiService openAiService;
 
-    public FolderService(FolderRepo folderRepo, AnalysisRepo analysisRepo, S3Service s3Service, OpenAiService openAiService) {
-        this.folderRepo = folderRepo;
-        this.analysisRepo = analysisRepo;
-        this.s3Service = s3Service;
-        this.openAiService = openAiService;
-    }
-
     //폴더 생성
-    public void saveFolderData(UUID userId, FolderDto.FolderInput folderInput) {
+    public UUID saveFolderData(UUID userId, FolderDto.FolderInput folderInput) {
         String newOutputText = "";
         // type=1이면? (면접이면)
         if (folderInput.getType() == 1) {
@@ -39,18 +37,13 @@ public class FolderService {
                 // 1. 최근 분석 요약본 3개 (생성중에는 없으니까 빈 리스트 반환)
                 List<String> recentSummaries = List.of();
 
-
-                // 질문 추가 생성 로직
-//              List<Analysis> analyses = analysisRepo.findTop3ByFolderIdOrderByCreatedAtDesc(folderId);
-//              recentSummaries = analyses.stream().map(Analysis::getSummary).toList();
-
-
                 // 2. OpenAI 호출
                 newOutputText = openAiService.generateInterviewQuestionsWithFile(
                         folderInput.getFileKey(),
                         folderInput.getCompanyName(),
                         folderInput.getInputText(),
-                        recentSummaries
+                        recentSummaries,
+                        null
                 );
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -73,11 +66,12 @@ public class FolderService {
                 .type(folderInput.getType())
                 .build();
 
-        folderRepo.save(newFolder);
+        Folder result = folderRepo.save(newFolder);
+        return result.getId();
     }
 
     //폴더 미리보기 반환
-    public List<FolderDto.FolderInfo> getFolderData(UUID userId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
+    public List<FolderDto.FolderCardnewsInfo> getFolderCardnewsData(UUID userId, Integer type, Integer limit, Integer page, Integer how, String keyWord) {
         // 키워드 % 추가
         String processedKeyWord = null;
         if (keyWord != null && !keyWord.isEmpty()) {
@@ -96,6 +90,24 @@ public class FolderService {
         Pageable pageable = PageRequest.of(pageNum - 1, pageSize, sort);
 
         return folderRepo.findFolders(userId, type, processedKeyWord, pageable);
+    }
+
+    // 폴더 상세정보 반환
+    public FolderDto.FolderInfo getFolderData(UUID userId, UUID folderId) {
+        // folderId로 폴더 존재 여부 검사 (없으면 404 에러)
+        Folder folder = folderRepo.findById(folderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 폴더입니다."));
+        //folder의 userId로 권한 검사
+        if (!folder.getUserId().equals(userId)) {
+            throw new IllegalStateException("접근 권한이 없는 폴더입니다.");
+        }
+        return FolderDto.FolderInfo.builder()
+                .title(folder.getTitle())
+                .fileName(folder.getFileName())
+                .extraInfo(folder.getExtraInfo())
+                .companyName(folder.getCompanyName())
+                .inputText(folder.getInputText())
+                .build();
     }
 
     //폴더 삭제
@@ -163,7 +175,7 @@ public class FolderService {
         return analysisRepo.findStatisticsByFolderId(folderId);
     }
 
-    // folder의 연습기록들 통계 조회
+    // folder의 세팅 조회
     @Transactional(readOnly = true)
     public FolderDto.FolderSettingRes getFolderSetting(UUID userId, UUID folderId) {
         // folderId로 폴더 존재 여부 검사 (없으면 404 에러)
@@ -195,6 +207,12 @@ public class FolderService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 폴더 타입입니다.");
         }
 
-        return new FolderDto.FolderSettingRes(resultContents);
+        EyeCalibration userEyeCalibration = userRepo.findById(userId).get().getEyeCalibration();
+
+        return FolderDto.FolderSettingRes.builder()
+                .set(resultContents)
+                .eyeCalibration(userEyeCalibration)
+                .build();
     }
+
 }

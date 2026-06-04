@@ -2,10 +2,13 @@ package com.server.talkup_be.service;
 
 import com.server.talkup_be.dto.AnalysisDto;
 import com.server.talkup_be.entity.Analysis;
+import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.entity.Folder;
+import com.server.talkup_be.entity.User;
 import com.server.talkup_be.repo.AnalysisRepo;
 import com.server.talkup_be.repo.EmitterRepo;
 import com.server.talkup_be.repo.FolderRepo;
+import com.server.talkup_be.repo.UserRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +34,7 @@ import static com.server.talkup_be.entity.AnalysisStatus.*;
 public class AnalysisService {
     private final AnalysisRepo analysisRepo;
     private final FolderRepo folderRepo;
+    private final UserRepo userRepo;
     private final S3Service s3Service;
     private final EmitterRepo emitterRepo;
     private final OpenAiService openAiService;
@@ -78,10 +82,12 @@ public class AnalysisService {
                 .summary(analysis.getSummary())
                 .createdAt(analysis.getCreatedAt())
                 .gazeScore(analysis.getGazeScore())
+                .gazeFeedback(analysis.getGazeFeedback())
                 .gazeDistribution(analysis.getGazeDistribution())
                 .fluencyLevel(analysis.getFluencyLevel())
                 .fluencyFeedback(analysis.getFluencyFeedback())
                 .speedScore(analysis.getSpeedScore())
+                .speedSpm(analysis.getSpeedSpm())
                 .speedDistribution(analysis.getSpeedDistribution())
                 .gestureFeedbackWord(analysis.getGestureFeedbackWord())
                 .gestureFeedbackSentence(analysis.getGestureFeedbackSentence())
@@ -131,7 +137,7 @@ public class AnalysisService {
 
     // 대기 상태 Analysis 생성
     @Transactional
-    public List<String> createPendingAnalysis(UUID userId, UUID folderId, String title, String fileKey, int type) {
+    public AnalysisDto.PendingAnalysisResult createPendingAnalysis(UUID userId, UUID folderId, String title, String fileKey, int type) {
         // 존재 유무 & 본인 folder 유무
         Folder folder = folderRepo.findById(folderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 폴더를 찾을 수 없습니다."));
@@ -148,11 +154,13 @@ public class AnalysisService {
                 .type(type)
                 .build();
 
+        // calibration 찾기
+        EyeCalibration eyeCalibration = userRepo.findById(userId).get().getEyeCalibration();
+
         // 3. DB에 저장 후 analysisId, extraInfo 반환
         UUID analysisId = analysisRepo.save(pendingAnalysis).getId();
-        String extraInfo = folderRepo.findById(folderId).get().getExtraInfo();
-        List<String> result = Arrays.asList(analysisId.toString(), extraInfo);
-        return result;
+        String extraInfo = folder.getExtraInfo();
+        return new AnalysisDto.PendingAnalysisResult(analysisId, extraInfo, eyeCalibration);
     }
 
     // ai 서버 analysis 분석 요청 실패시 실행
@@ -256,10 +264,12 @@ public class AnalysisService {
             // 4. Analysis 엔티티 업데이트
             analysis.updateAnalysisResult(
                     resultInput.getGazeScore(),
+                    resultInput.getGazeFeedback(),
                     resultInput.getGazeDistribution(),
                     resultInput.getFluencyLevel(),
                     resultInput.getFluencyFeedback(),
                     resultInput.getSpeedScore(),
+                    resultInput.getSpeedSpm(),
                     resultInput.getSpeedDistribution(),
                     resultInput.getGestureFeedbackWord(),
                     resultInput.getGestureFeedbackSentence(),
@@ -272,6 +282,9 @@ public class AnalysisService {
             // 꼬리질문 생성
             if(analysis.getType() == 1){
                 try {
+                    // 질문들 가져오기
+                    String previousQuestions = folder.getOutputText();
+
                     // 1. 최근 분석 요약본 3개 (없으면 빈 리스트 반환)
                     List<String> recentSummaries = analysisRepo.findTopSummaryByFolderId(folderId,PageRequest.of(0, 3));
 
@@ -280,8 +293,10 @@ public class AnalysisService {
                             folder.getFileKey(),
                             folder.getCompanyName(),
                             folder.getInputText(),
-                            recentSummaries
+                            recentSummaries,
+                            previousQuestions
                     );
+                    newOutputText = newOutputText.replaceAll("^\\s*\\d+\\.\\s*", "");
 
                     // folder update
                     folder.setOutputText(newOutputText);

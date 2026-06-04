@@ -1,6 +1,7 @@
 package com.server.talkup_be.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.server.talkup_be.entity.EyeCalibration;
 import com.server.talkup_be.entity.GazeDistribution;
 import com.server.talkup_be.entity.SpeedDistribution;
 import lombok.*;
@@ -50,10 +51,12 @@ public class AnalysisDto {
     public static class ResultInput {
         private UUID analysisId;
         private Integer gazeScore;
+        private String gazeFeedback;
         private GazeDistribution gazeDistribution;
         private Integer fluencyLevel;
         private String fluencyFeedback;
         private Integer speedScore;
+        private Float speedSpm;
         private SpeedDistribution speedDistribution;
         private String gestureFeedbackWord;
         private String gestureFeedbackSentence;
@@ -79,10 +82,12 @@ public class AnalysisDto {
         private LocalDateTime createdAt;
 
         private Integer gazeScore;
+        private String gazeFeedback;
         private GazeDistribution gazeDistribution;
         private Integer fluencyLevel;
         private String fluencyFeedback;
         private Integer speedScore;
+        private Float speedSpm;
         private SpeedDistribution speedDistribution;
         private String gestureFeedbackWord;
         private String gestureFeedbackSentence;
@@ -117,5 +122,15 @@ public class AnalysisDto {
     @ToString
     public static class AnalysisDeleteList {
         private List<UUID> analysisId;
+    }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public static class PendingAnalysisResult {
+        private UUID analysisId;
+        private String extraInfo;
+        private EyeCalibration eyeCalibration;
     }
 }
