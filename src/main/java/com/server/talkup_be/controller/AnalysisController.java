@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -162,6 +165,22 @@ public class AnalysisController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "알림 연결 실패");
         }
 
+        // 15초마다 Heartbeat를 보내는 스케줄러 (CloudFront 연결 끊김 방지용)
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                // 무시해도 되는 ping 데이터
+                emitter.send(SseEmitter.event().name("ping").data("heartbeat"));
+            } catch (Exception e) {
+                scheduler.shutdown(); // 연결이 닫혔거나 에러가 나면 스케줄러 종료
+            }
+        }, 15, 15, TimeUnit.SECONDS);
+
+        // Emitter가 완료되거나 타임아웃될 때 스케줄러도 함께 종료되도록 콜백 등록
+        emitter.onCompletion(scheduler::shutdown);
+        emitter.onTimeout(scheduler::shutdown);
+        emitter.onError(e -> scheduler.shutdown());
+
         // 5. AI 서버로 분석 시작 요청(비동기 스레드)
         CompletableFuture.runAsync(() -> {
             triggerAiAnalysis(result.getAnalysisId(), fileKey, type, result.getExtraInfo(), result.getEyeCalibration());
@@ -222,5 +241,23 @@ public class AnalysisController {
         // 서버나 DB가 터졌을 때 (500)
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
     }
+    }
+
+    // ai서버에서 analysis 분석이 실패했을 때
+    @PostMapping("/fail")
+    public ResponseEntity<String> receiveAiFailure(
+            @RequestHeader("X-Internal-Secret") String secretHeader,
+            @RequestBody AnalysisDto.ResultFail payload) {
+
+        if (!internalSecret.equals(secretHeader)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "허가되지 않은 접근입니다.");
+        }
+
+        log.warn("AI 서버로부터 분석 실패 웹훅 수신 - analysisId: {}", payload.getAnalysisId());
+
+        // 롤백 로직
+        analysisService.rollbackPendingAnalysis(payload.getAnalysisId(), payload.getFileKey());
+
+        return ResponseEntity.ok("Fail handled successfully");
     }
 }
