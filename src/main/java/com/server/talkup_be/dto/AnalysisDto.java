@@ -133,4 +133,12 @@ public class AnalysisDto {
         private String extraInfo;
         private EyeCalibration eyeCalibration;
     }
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    public static class ResultFail {
+        private UUID analysisId;
+        private String fileKey;
+    }
 }

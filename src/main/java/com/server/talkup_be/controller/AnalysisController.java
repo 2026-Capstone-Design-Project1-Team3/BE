@@ -242,4 +242,22 @@ public class AnalysisController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
     }
     }
+
+    // ai서버에서 analysis 분석이 실패했을 때
+    @PostMapping("/fail")
+    public ResponseEntity<String> receiveAiFailure(
+            @RequestHeader("X-Internal-Secret") String secretHeader,
+            @RequestBody AnalysisDto.ResultFail payload) {
+
+        if (!internalSecret.equals(secretHeader)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "허가되지 않은 접근입니다.");
+        }
+
+        log.warn("AI 서버로부터 분석 실패 웹훅 수신 - analysisId: {}", payload.getAnalysisId());
+
+        // 롤백 로직
+        analysisService.rollbackPendingAnalysis(payload.getAnalysisId(), payload.getFileKey());
+
+        return ResponseEntity.ok("Fail handled successfully");
+    }
 }
